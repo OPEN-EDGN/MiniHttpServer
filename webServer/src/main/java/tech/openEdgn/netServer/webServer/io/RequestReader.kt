@@ -1,13 +1,14 @@
 package tech.openEdgn.netServer.webServer.io
 
-import tech.openEdgn.netServer.webServer.bean.BaseFormData
-import tech.openEdgn.netServer.webServer.bean.StringFormData
+import tech.openEdgn.netServer.webServer.bean.BaseDataReader
 import tech.openEdgn.netServer.webServer.data.METHOD
 import tech.openEdgn.netServer.webServer.data.MethodData
 import tech.openEdgn.netServer.webServer.error.HeaderFormatException
 import tech.openEdgn.netServer.webServer.error.MethodFormatException
 import tech.openEdgn.netServer.webServer.utils.DataReader
 import tech.openEdgn.netServer.webServer.utils.WebLogger
+import tech.openEdgn.netServer.webServer.utils.decodeFormData
+import tech.openEdgn.tools4k.safeClose
 import java.io.*
 import java.lang.NullPointerException
 import java.net.URLDecoder
@@ -21,7 +22,7 @@ class RequestReader(
     private val reader = DataReader(inputStream)
     val methodData: MethodData
     val header = HashMap<String, String>()
-    val formData = HashMap<String, BaseFormData>()
+    val formData = HashMap<String, BaseDataReader>()
 
     init {
         val methodLine = reader.readLine() ?: throw NullPointerException("METHOD 读取中断！")
@@ -49,19 +50,11 @@ class RequestReader(
         }
         //解析出所有url下键值对
         if (method == METHOD.GET && urlData.isNotEmpty()) {
-            val urlDataSpit = urlData.split("&")
-            for (dataItem in urlDataSpit) {
-                dataItem.split("=").let {
-                    if (it.size == 2) {
-                        val name = URLDecoder.decode(it[0], charset.name())
-                        formData[name] = StringFormData(name, URLDecoder.decode(it[1], charset.name()))
-                    } else {
-                        logger.warn("表单键值对下有一对数据无法解析:[$dataItem]")
-                    }
-                }
-            }
+            logger.decodeFormData(urlData,formData,charset)
+            // 解析 GET 附加表单
         } else if (urlData.isNotEmpty()) {
             logger.debug("在[$method]下已自动排除url中带的表单数据:{$urlData}")
+            // POST 不会处理 URL 的附加数据
         } else {
             logger.debug("URL 中未发现无表单键值对.")
         }
@@ -77,20 +70,24 @@ class RequestReader(
             if (headerSpit.size != 2) {
                 throw HeaderFormatException(line)
             }
-            header[headerSpit[0]] = headerSpit[1].trim()
+            header[headerSpit[0]] =URLDecoder.decode( headerSpit[1].trim(),charset.name())
+
         }
 //     开始读取 POST 表单数据
         if (method == METHOD.POST){
             if (tempFolder.isDirectory.not()) {
                 tempFolder.mkdirs()
             }
-
         }
-
     }
 
+
     override fun close() {
-        reader.close()
+        reader.safeClose()
+        header.clear()
+        for (value in formData.values) {
+            value.safeClose()
+        }
     }
 
     fun printInfo(logger: WebLogger) {
@@ -100,8 +97,8 @@ class RequestReader(
                 logger.debug("HEADER(name=\"$t\",value=\"$u\").")
             }
             logger.debug("HEADER LEN:${header.size} .")
-            formData.forEach { (_, u) ->
-                logger.debug("BODY{${u.toPrintString()}}")
+            formData.forEach { (t, u) ->
+                logger.debug("BODY(name=\"$t\",data=\"$u\")")
             }
             logger.debug("FORM LEN:${formData.size} .")
 

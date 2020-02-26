@@ -1,12 +1,15 @@
 package tech.openEdgn.netServer.webServer
 
 import org.junit.Test
+import tech.openEdgn.tools4k.safeClose
+import java.io.Closeable
 
 class WebServerTest{
 
     @Test
     fun test(): Unit {
-            println("saa:".matches(Regex("^(.+):(.*)$")))
+            val c:Closeable? = null
+        c.safeClose()
 //        val file = File("D:/Env/test.txt")
 //        val inputStream = file.inputStream()
 //        val bufferedReader = BufferedReader(inputStream.reader(),1)
