@@ -22,6 +22,9 @@ class RequestReader(
     private val logger: WebLogger,
     private val tempFolder: File
 ) : Closeable {
+    companion object {
+        const val METHOD_SPIT_SIZE = 3
+    }
 
     private val reader = BufferedInputStream(inputStream)
     val methodData: MethodData
@@ -29,12 +32,12 @@ class RequestReader(
     val formData = HashMap<String, BaseDataReader>()
 
     init {
-        val methodLine = reader.readLine() ?: throw NullPointerException("METHOD 读取中断！")
+        val methodLine = reader.readLineEndWithCRLF() ?: throw NullPointerException("METHOD 读取中断！")
         if (methodLine.matches(Regex("^(GET|POST)\\s(/)(.*)\\s\\w{4}(/).+$")).not()) {
             throw MethodFormatException(methodLine)
         }
         val methodSplit = methodLine.split(" ")
-        if (methodSplit.size != 3) {
+        if (methodSplit.size != METHOD_SPIT_SIZE) {
             throw MethodFormatException(methodLine)
         }
         val method = METHOD.valueOf(methodSplit[0])
@@ -63,13 +66,13 @@ class RequestReader(
             logger.debug("URL 中未发现无表单键值对.")
         }
         methodData = MethodData(
-            method,
-            URLDecoder.decode(location, charset.name()),
-            methodSplit[2].toLowerCase()
+                method,
+                URLDecoder.decode(location, charset.name()),
+                methodSplit[2].toLowerCase()
         )
         // 读取method 结束
         while (true) {
-            val line = reader.readLine() ?: throw NullPointerException("Header 读取中断！")
+            val line = reader.readLineEndWithCRLF() ?: throw NullPointerException("Header 读取中断！")
             if (line.isEmpty()) {
                 break
                 // 代表Header已经全部读取完成

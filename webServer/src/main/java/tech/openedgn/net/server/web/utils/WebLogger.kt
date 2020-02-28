@@ -2,8 +2,7 @@ package tech.openedgn.net.server.web.utils
 
 import tech.openEdgn.tools4k.toPrintString
 import java.text.SimpleDateFormat
-import java.util.*
-
+import java.util.Locale
 
 fun Any.getWebLogger() = WebLogger(this.javaClass)
 fun Any.getWebLogger(any: Any) = WebLogger(any.javaClass)
@@ -24,7 +23,6 @@ data class WebOutputItem(
     val exception: Throwable?
 )
 
-
 class WebLogger constructor(private val clazz: Class<out Any>) {
 
     var remoteAddress: String = "HOST"
@@ -39,48 +37,46 @@ class WebLogger constructor(private val clazz: Class<out Any>) {
     @JvmOverloads
     fun info(message: String, exception: Throwable? = null): WebLogger {
         outputLogger(Thread.currentThread().name,
-            WebLoggerLevel.INFO, message, exception)
+                WebLoggerLevel.INFO, message, exception)
         return this
     }
 
     @JvmOverloads
     fun debug(message: String, exception: Throwable? = null): WebLogger {
         outputLogger(Thread.currentThread().name,
-            WebLoggerLevel.DEBUG, message, exception)
+                WebLoggerLevel.DEBUG, message, exception)
         return this
     }
 
     @JvmOverloads
     fun warn(message: String, exception: Throwable? = null): WebLogger {
         outputLogger(Thread.currentThread().name,
-            WebLoggerLevel.WARN, message, exception)
+                WebLoggerLevel.WARN, message, exception)
         return this
     }
 
     @JvmOverloads
     fun error(message: String, exception: Throwable? = null): WebLogger {
         outputLogger(Thread.currentThread().name,
-            WebLoggerLevel.ERROR, message, exception)
+                WebLoggerLevel.ERROR, message, exception)
         return this
     }
 
     private fun outputLogger(threadName: String, level: WebLoggerLevel, message: String, exception: Throwable?) {
         WebLoggerConfig.outputLog(
-            WebOutputItem(
-                clazz,
-                remoteAddress,
-                threadName.toUpperCase(Locale.ENGLISH),
-                level,
-                message,
-                exception
-            )
+                WebOutputItem(
+                        clazz,
+                        remoteAddress,
+                        threadName.toUpperCase(Locale.ENGLISH),
+                        level,
+                        message,
+                        exception
+                )
         )
     }
 
-
     val isDebug: Boolean
         get() = WebLoggerConfig.debug
-
 }
 
 object WebLoggerConfig {
@@ -102,7 +98,7 @@ object WebLoggerConfig {
                     .append(" - ")
                     .append(webOutputItem.clazz.simpleName)
                     .append(":")
-                    .append(webOutputItem.message.replace(Regex("\\p{C}"),"#"))
+                    .append(webOutputItem.message.replace(Regex("\\p{C}"), "#"))
             if (webOutputItem.exception != null) {
                 stringBuilder.append("\r\n")
                         .append(webOutputItem.exception.toPrintString())
@@ -110,5 +106,6 @@ object WebLoggerConfig {
             println(stringBuilder)
         }
     }
+
     var debug: Boolean = false
 }

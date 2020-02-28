@@ -3,7 +3,6 @@ package tech.openedgn.net.server.web.bean
 import java.io.IOException
 import java.net.Inet6Address
 import java.net.InetAddress
-import java.net.UnknownHostException
 
 /**
  * # 网络主机信息
@@ -24,7 +23,7 @@ data class NetworkInfo(val ip: String, val port: Int, val hostName: String = ip)
     }
 
     init {
-        if ((InetAddress.getByName(ip) is Inet6Address).not() && ip.matches(Regex(PATTERN)).not()){
+        if ((InetAddress.getByName(ip) is Inet6Address).not() && ip.matches(Regex(PATTERN)).not()) {
             throw IOException("[$ip] 格式错误. (Unrecognized)")
         }
         // 是否为正确的 IP

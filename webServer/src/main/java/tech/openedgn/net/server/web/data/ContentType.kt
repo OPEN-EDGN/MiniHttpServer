@@ -353,13 +353,35 @@ enum class ContentType(val fileType: String, val application: String) {
     TYPE_X_X_B(".x_b", "application/x-x_b"),
     TYPE_X_X_T(".x_t", "application/x-x_t");
 
-    fun getFileContentType(file: File) = getContentType(file.name)
-    fun getContentType(fileName: String): ContentType {
-        for (contentType in values().iterator()) {
-            if (fileName.contains(contentType.fileType)) {
-                return contentType
+    companion object {
+
+        /**
+         * 得到文件 `Content-Type` 类型
+         *
+         * 注意，此方案是通过文件名来判断的，并不准确
+         *
+         * @param file File 文件位置
+         * @return ContentType 文件的类型
+         */
+        fun getFileContentType(file: File) = getFileNameContentType(file.name)
+
+        /**
+         *  通过文件名称得到文件 Content-Type 类型
+         *
+         *  此方案仅依赖简单的后缀名判断
+         *
+         * @param fileName String 文件名称
+         * @return ContentType 得到的类型
+         */
+        fun getFileNameContentType(fileName: String): ContentType {
+            for (contentType in values().iterator()) {
+                if (fileName.contains(contentType.fileType)) {
+                    return contentType
+                }
             }
+            return TYPE_OCTET_STREAM
         }
-        return TYPE_OCTET_STREAM
     }
 }
+
+fun File.getContentType() = ContentType.getFileContentType(this)
