@@ -353,6 +353,7 @@ enum class ContentType(val fileType: String, val application: String) {
     TYPE_X_X_B(".x_b", "application/x-x_b"),
     TYPE_X_X_T(".x_t", "application/x-x_t");
 
+
     companion object {
 
         /**
@@ -375,8 +376,25 @@ enum class ContentType(val fileType: String, val application: String) {
          */
         fun getFileNameContentType(fileName: String): ContentType {
             for (contentType in values().iterator()) {
-                if (fileName.contains(contentType.fileType)) {
+                if (fileName.endsWith(contentType.fileType)) {
                     return contentType
+                }
+            }
+            return TYPE_OCTET_STREAM
+        }
+
+        /**
+         * 通过Content-Type得到文件 Content-Type 类型
+         *
+         *
+         *  @param contentType String `Content-Type` 字符串
+         * @return ContentType Content-Type 类型
+         */
+        fun getContentType(contentType: String): ContentType {
+            val c = contentType.toLowerCase()
+            for (t in values().iterator()) {
+                if (c.contains(t.application)) {
+                    return t
                 }
             }
             return TYPE_OCTET_STREAM

@@ -13,3 +13,6 @@ class MethodFormatException(methodLine: String) :
 class HeaderFormatException(headerLine: String) :
     HttpHeaderException("无法解析此HEADER 字段：[$headerLine]")
 class BodyFormatException(message: String) : HttpHeaderException("无法解析此BODY内容：[$message]")
+
+class BadRequestException(message: String) : HttpHeaderException(message)
+

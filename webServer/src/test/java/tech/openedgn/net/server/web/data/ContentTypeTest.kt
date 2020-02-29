@@ -1,6 +1,7 @@
 package tech.openedgn.net.server.web.data
 
 import com.google.gson.Gson
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -10,6 +11,20 @@ import kotlin.collections.HashMap
 
 class ContentTypeTest {
 
+    @DisplayName("测试通过文件名称得到Content-Type")
+    @Test
+    fun contentTypeTestA() {
+        assertEquals(ContentType.getFileNameContentType("music.mp3"), ContentType.TYPE_MP3)
+        assertEquals(ContentType.getFileNameContentType(".mp6"), ContentType.TYPE_OCTET_STREAM)
+    }
+
+    @DisplayName("测试通过ContentType字段得到Content-Type")
+    @Test
+    fun contentTypeTestB() {
+        assertEquals(ContentType.getContentType("audio/mp3"), ContentType.TYPE_MP3)
+        assertEquals(ContentType.getContentType("text/html;charset=utf-8"), ContentType.TYPE_HTML)
+        assertEquals(ContentType.getFileNameContentType("audio/mp6"), ContentType.TYPE_OCTET_STREAM)
+    }
 
     /**
      * 此方法用于自动生成`Content-Type`字段

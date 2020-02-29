@@ -25,7 +25,7 @@ class WebServer @JvmOverloads constructor(
     /**
      * 软件配置
      */
-    val webConfig = WebConfig(serverPort)
+    val webConfig = WebConfig(serverPort )
 
     private val serverSocket =
             factory.createServerSocket(webConfig.serverPort) ?: throw SocketException("端口[$serverPort] 绑定错误！")
@@ -42,6 +42,7 @@ class WebServer @JvmOverloads constructor(
 
     override fun close() {
         serverSocket.close()
+        webConfig.close()
     }
 
     fun enable() {

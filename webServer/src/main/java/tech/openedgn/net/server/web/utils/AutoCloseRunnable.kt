@@ -1,5 +1,6 @@
 package tech.openedgn.net.server.web.utils
 
+import tech.openedgn.net.server.web.error.HttpException
 import java.io.Closeable
 import java.util.concurrent.ConcurrentLinkedDeque
 
@@ -17,12 +18,15 @@ abstract class AutoCloseRunnable : Runnable {
         return this
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught")
     override fun run() {
         logger.debug("线程实例 [${Thread.currentThread().name}] 已经启动.")
         try {
             execute()
+        } catch (e: HttpException) {
+            logger.warn(e.message)
         } catch (e: Exception) {
-            logger.warn("线程 [${Thread.currentThread().name}] 在执行过程中抛出异常.", e)
+            logger.error("线程 [${Thread.currentThread().name}] 在执行过程中出现不可预测的异常.", e)
         } finally {
             for (close in autoCloseable) {
                 try {
@@ -33,6 +37,7 @@ abstract class AutoCloseRunnable : Runnable {
                 }
             }
         }
+        autoCloseable.clear()
         logger.debug("如无意外，线程实例 [${Thread.currentThread().name}] 已经结束.")
     }
 

@@ -20,7 +20,6 @@ interface BaseDataReader : Closeable {
     open fun toString(charset: Charset): String {
         return openInputStream().readText(charset)
     }
-
 }
 
 class ByteArrayDataReader(private val data: ByteArray) :
@@ -34,8 +33,7 @@ class ByteArrayDataReader(private val data: ByteArray) :
         return data.toString(charset)
     }
 
-    override fun close() {
-    }
+    override fun close() {}
 
     override fun toString(): String {
         val info = if (size < 50) {
@@ -45,7 +43,6 @@ class ByteArrayDataReader(private val data: ByteArray) :
         }
         return "${javaClass.simpleName}(dataLength=\"${data.size}\",$info)"
     }
-
 }
 
 /**
@@ -88,7 +85,8 @@ class FileDataReader(private val file: File) :
     }
 
     override fun toString(): String {
-        return "${javaClass.simpleName}(path=\"${file.absolutePath}\",MD5=\"${openInputStream().calculatedHash(METHOD.MD5)}\")"
+        return "${javaClass.simpleName}(path=\"${file.absolutePath}\"," +
+                "MD5=\"${openInputStream().calculatedHash(METHOD.MD5)}\")"
     }
 }
 
@@ -104,7 +102,7 @@ fun String.createDataReader() =
  * @property maxMemorySize Int 超过此值就保存到文件中.
  *
  */
-class DataReaderOutputStream(private val tempFile: File, private val maxMemorySize: Int = 4096) : OutputStream() {
+class DataReaderOutputStream(private val tempFile: File, private val maxMemorySize: Int = 8182) : OutputStream() {
 
     init {
         if (tempFile.isFile && tempFile.length() > 0) {
@@ -112,7 +110,7 @@ class DataReaderOutputStream(private val tempFile: File, private val maxMemorySi
         }
         tempFile.delete()
         if (tempFile.createNewFile().not()) {
-            throw  IOException("文件创建失败.")
+            throw IOException("文件创建失败.")
         }
     }
 
@@ -120,12 +118,11 @@ class DataReaderOutputStream(private val tempFile: File, private val maxMemorySi
 
     private var output: OutputStream = ByteArrayOutputStream(maxMemorySize)
 
-
     private var closed = false
     // 是否结束的指示
 
     private var checkFile = false
-    //是否将缓存切换成本地储存
+    // 是否将缓存切换成本地储存
 
     private var size = 0
     // 内存的缓存大小

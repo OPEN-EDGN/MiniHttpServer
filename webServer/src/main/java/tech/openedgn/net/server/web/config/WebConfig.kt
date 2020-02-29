@@ -1,10 +1,14 @@
 package tech.openedgn.net.server.web.config
 
+import tech.openedgn.net.server.web.io.RequestBodyLoader
 import tech.openedgn.net.server.web.utils.getWebLogger
+import java.io.Closeable
 import java.io.File
 import java.nio.charset.Charset
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KClass
 
-class WebConfig(val serverPort: Int) {
+class WebConfig(val serverPort: Int) : Closeable {
     fun printInfo() {
         logger.debugOnly {
             it.debug("临时目录:${tempFolder.absolutePath}.")
@@ -42,9 +46,10 @@ class WebConfig(val serverPort: Int) {
     /**
      *  Web 服务器编码类型
      */
+    @Volatile
     var charset: Charset = Charsets.UTF_8
 
-//    val requestBodyLoader:HashMap<METHOD, KClass<out RequestBodyLoader>> = TODO()
+    val requestBodyLoader: Map<String, KClass<out RequestBodyLoader>> = ConcurrentHashMap(mapOf())
 
     inner class SafeMode {
 
@@ -52,5 +57,8 @@ class WebConfig(val serverPort: Int) {
          * 单连接最大请求长度
          */
 //        val maxBufferSize:Long = 50 * 1024 * 1024
+    }
+
+    override fun close() {
     }
 }
