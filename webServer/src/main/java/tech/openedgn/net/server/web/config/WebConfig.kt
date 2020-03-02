@@ -1,5 +1,6 @@
 package tech.openedgn.net.server.web.config
 
+import tech.openedgn.net.server.web.io.FormDataBodyLoader
 import tech.openedgn.net.server.web.io.RequestBodyLoader
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
@@ -49,7 +50,10 @@ class WebConfig(val serverPort: Int) : Closeable {
     @Volatile
     var charset: Charset = Charsets.UTF_8
 
-    val requestBodyLoader: Map<String, KClass<out RequestBodyLoader>> = ConcurrentHashMap(mapOf())
+    val requestBodyLoader: ConcurrentHashMap<String, KClass<out RequestBodyLoader>> =
+            ConcurrentHashMap(mapOf(
+                    Pair("multipart/form-data", FormDataBodyLoader::class)
+            ))
 
     inner class SafeMode {
 

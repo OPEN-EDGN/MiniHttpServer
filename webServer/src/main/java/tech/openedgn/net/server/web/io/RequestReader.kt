@@ -9,9 +9,11 @@ import tech.openedgn.net.server.web.utils.BufferedInputStream
 import tech.openedgn.net.server.web.utils.WebLogger
 import tech.openedgn.net.server.web.utils.decodeFormData
 import tech.openEdgn.tools4k.safeClose
+import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.error.BadRequestException
 import tech.openedgn.net.server.web.utils.ByteArrayDataReader
 import tech.openedgn.net.server.web.utils.DataReaderOutputStream
+import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -20,20 +22,19 @@ import java.net.URLDecoder
 import java.nio.charset.Charset
 import java.util.*
 import kotlin.collections.HashMap
-import kotlin.math.log
 import kotlin.reflect.KClass
 
 class RequestReader(
     inputStream: InputStream,
     private val charset: Charset,
-    private val logger: WebLogger,
+    private val networkInfo: NetworkInfo,
     private val tempFolder: File
 ) : Closeable {
     companion object {
         const val METHOD_SPIT_SIZE = 3
     }
-
-    private val sessionId = UUID.randomUUID().toString()
+    private val logger = getWebLogger()
+    val sessionId = UUID.randomUUID().toString()
     private val reader = BufferedInputStream(inputStream)
     val methodData: MethodData
     val header = HashMap<String, String>()
@@ -41,6 +42,7 @@ class RequestReader(
     val rawFormData: BaseDataReader
 
     init {
+        logger.remoteAddress = networkInfo.toString()
         val methodLine = reader.readLineEndWithCRLF() ?: throw NullPointerException("METHOD 读取中断！")
         if (methodLine.matches(Regex("^(GET|POST)\\s(/)(.*)\\s\\w{4}(/).+$")).not()) {
             throw MethodFormatException(methodLine)
@@ -104,7 +106,7 @@ class RequestReader(
             }
             rawFormData = outputStream.openDataReader()
             header["Content-Length"]?.let {
-                if (rawFormData.size < it.toLong()){
+                if (rawFormData.size < it.toLong()) {
                     throw BadRequestException("POST 表单的实际长度低于 HEADER 标明长度. [${rawFormData.size} < ${it.length}]")
                 }
             }
@@ -116,7 +118,15 @@ class RequestReader(
     fun loadBody(loader: Map<String, KClass<out RequestBodyLoader>>) {
         if (methodData.type == METHOD.POST) {
             val keys = loader.keys
+            logger.debugOnly {
+                it.debug("可解析的POST类型：$keys")
+            }
+            val contentType = BadRequestException("请求为POST但是为止请求类型（未发现Content-Type字段）.")
+            header["Content-Type"]?:throw contentType
+            var findKClass: KClass<out BaseDataReader>? = null
+            for (key in keys) {
 
+            }
         } else {
             logger.debug("执行到#loadBody()方法，但是此会话为 GET")
         }
@@ -133,17 +143,17 @@ class RequestReader(
     }
 
     fun printInfo(logger: WebLogger) {
-        logger.info("接受会话 [$methodData]")
+        logger.info("ACCEPT [$methodData]")
         logger.debugOnly {
             header.forEach { (t, u) ->
                 logger.debug("HEADER(name=\"$t\",value=\"$u\").")
             }
-            logger.debug("HEADER LEN:${header.size} .")
+            logger.debug("HEADER.length:${header.size} .")
             formData.forEach { (t, u) ->
                 logger.debug("BODY(name=\"$t\",data=\"$u\")")
             }
-            logger.debug("解析完成的表单长度:${formData.size} .")
-            logger.debug("原始表单数据:${rawFormData}")
+            logger.debug("BODY.length:${formData.size} .")
+            logger.debug("原始表单数据:$rawFormData")
         }
     }
 }

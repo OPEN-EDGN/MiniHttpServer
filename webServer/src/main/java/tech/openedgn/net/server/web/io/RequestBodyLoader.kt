@@ -26,7 +26,7 @@ interface RequestBodyLoader : Closeable {
     ): Boolean
 }
 
-class FormDataBodyLoader : RequestBodyLoader {
+class FormDataBodyLoader() : RequestBodyLoader {
 
     override fun load(
         location: String,

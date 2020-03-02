@@ -14,7 +14,7 @@ class ClientRunnable(
         RequestReader(
                 client.getInputStream(),
                 webConfig.charset,
-                logger,
+                networkInfo,
                 webConfig.tempFolder
         ).registerAutoClose()
     }
@@ -25,8 +25,8 @@ class ClientRunnable(
     }
 
     override fun execute() {
-        httpReader.printInfo(logger)
         httpReader.loadBody(webConfig.requestBodyLoader)
+        httpReader.printInfo(logger)
 
     }
 }
