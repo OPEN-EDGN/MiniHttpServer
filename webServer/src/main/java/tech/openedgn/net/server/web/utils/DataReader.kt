@@ -4,6 +4,7 @@ import tech.openEdgn.tools4k.METHOD
 import tech.openEdgn.tools4k.calculatedHash
 import tech.openEdgn.tools4k.readText
 import tech.openEdgn.tools4k.safeClose
+import tech.openedgn.net.server.web.WebServer
 import java.io.*
 import java.nio.charset.Charset
 import java.util.*
@@ -100,9 +101,14 @@ fun String.createDataReader() =
  *
  * @property tempFile File 临时文件位置
  * @property maxMemorySize Int 超过此值就保存到文件中.
+ * @property openDataReaderHook 内部触发器逻辑
  *
  */
-class DataReaderOutputStream(private val tempFile: File, private val maxMemorySize: Int = 8182) : OutputStream() {
+class DataReaderOutputStream(
+    private val tempFile: File,
+    private val maxMemorySize: Int = WebServer.CACHE_SIZE,
+    private val openDataReaderHook: (BaseDataReader) -> Unit = {}
+) : OutputStream() {
 
     init {
         if (tempFile.isFile && tempFile.length() > 0) {
@@ -120,6 +126,8 @@ class DataReaderOutputStream(private val tempFile: File, private val maxMemorySi
 
     private var closed = false
     // 是否结束的指示
+
+    private var open = false
 
     private var checkFile = false
     // 是否将缓存切换成本地储存
@@ -171,12 +179,16 @@ class DataReaderOutputStream(private val tempFile: File, private val maxMemorySi
 
     private val dataReader: BaseDataReader by lazy {
         synchronized(lock) {
+            open = true
             close()
-            if (checkFile) {
+            val baseDataReader = if (checkFile) {
                 FileDataReader(tempFile)
             } else {
                 ByteArrayDataReader((output as ByteArrayOutputStream).toByteArray())
             }
+            openDataReaderHook(baseDataReader)
+            // 触发器HOOK
+            baseDataReader
         }
     }
 
@@ -196,6 +208,9 @@ class DataReaderOutputStream(private val tempFile: File, private val maxMemorySi
             output.safeClose()
             closed = true
             if (checkFile.not()) {
+                tempFile.delete()
+            }
+            if (open.not()) {
                 tempFile.delete()
             }
         }

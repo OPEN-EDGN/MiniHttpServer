@@ -1,6 +1,7 @@
 package tech.openedgn.net.server.web.utils
 
 import tech.openedgn.net.server.web.error.HttpException
+import tech.openedgn.net.server.web.error.WebServerInternalException
 import java.io.Closeable
 import java.util.concurrent.ConcurrentLinkedDeque
 
@@ -23,6 +24,9 @@ abstract class AutoCloseRunnable : Runnable {
         logger.debug("线程实例 [${Thread.currentThread().name}] 已经启动.")
         try {
             execute()
+        } catch (e: WebServerInternalException) {
+            logger.error("内部错误!")
+            logger.error(e.mess,e.throwable)
         } catch (e: HttpException) {
             logger.warn(e.message)
         } catch (e: Exception) {

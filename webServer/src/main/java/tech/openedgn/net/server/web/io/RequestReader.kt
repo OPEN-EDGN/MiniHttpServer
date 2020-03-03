@@ -9,8 +9,10 @@ import tech.openedgn.net.server.web.utils.BufferedInputStream
 import tech.openedgn.net.server.web.utils.WebLogger
 import tech.openedgn.net.server.web.utils.decodeFormData
 import tech.openEdgn.tools4k.safeClose
+import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.error.BadRequestException
+import tech.openedgn.net.server.web.error.WebServerInternalException
 import tech.openedgn.net.server.web.utils.ByteArrayDataReader
 import tech.openedgn.net.server.web.utils.DataReaderOutputStream
 import tech.openedgn.net.server.web.utils.getWebLogger
@@ -33,16 +35,60 @@ class RequestReader(
     companion object {
         const val METHOD_SPIT_SIZE = 3
     }
-    private val logger = getWebLogger()
-    val sessionId = UUID.randomUUID().toString()
+
     private val reader = BufferedInputStream(inputStream)
-    val methodData: MethodData
+
+    private val logger = getWebLogger()
+    /**
+     * 会话 ID
+     */
+    val sessionId = UUID.randomUUID().toString()
+    /**
+     *  HTTP METHOD
+     */
+    lateinit var methodData: MethodData
+    /**
+     * HTTP 头部数据
+     */
     val header = HashMap<String, String>()
+    /**
+     * 表单
+     */
     val formData = HashMap<String, BaseDataReader>()
-    val rawFormData: BaseDataReader
+    /**
+     * 原始的表单数据
+     */
+    lateinit var rawFormData: BaseDataReader
+
+    private var bodyLoader: RequestBodyLoader? = null
+
+    private val closeableLinkedList = LinkedList<Closeable>()
+
+    protected fun <T : Closeable> T.autoClose(): T {
+        synchronized(closeableLinkedList) {
+            closeableLinkedList.addFirst(this)
+        }
+        return this
+    }
+
+    private val hookFunc: (BaseDataReader) -> Unit = { it.autoClose() }
+
+    val tempBlockCreateFunc: (name: String) -> DataReaderOutputStream = {
+        val dataReaderOutputStream = DataReaderOutputStream(
+                File(tempFolder, "temp-$sessionId-$it-${System.nanoTime()}.tmp"),
+                WebServer.CACHE_SIZE,
+                hookFunc)
+        dataReaderOutputStream.autoClose()
+    }
 
     init {
         logger.remoteAddress = networkInfo.toString()
+    }
+
+    /**
+     * 读取表头信息
+     */
+    fun loadHeader() {
         val methodLine = reader.readLineEndWithCRLF() ?: throw NullPointerException("METHOD 读取中断！")
         if (methodLine.matches(Regex("^(GET|POST)\\s(/)(.*)\\s\\w{4}(/).+$")).not()) {
             throw MethodFormatException(methodLine)
@@ -56,7 +102,6 @@ class RequestReader(
             it.substring(0, if (it.indexOf("#") != -1) it.indexOf("#") else it.length)
         }
         // 剔除锚点
-
         val urlData = location.let {
             val indexOf = it.indexOf("?")
             if (indexOf != -1) {
@@ -81,6 +126,8 @@ class RequestReader(
                 URLDecoder.decode(location, charset.name()),
                 methodSplit[2].toLowerCase()
         )
+        rawFormData = ByteArrayDataReader(urlData.toByteArray())
+        logger.info("ACCEPT [$methodData]")
         // 读取method 结束
         while (true) {
             val line = reader.readLineEndWithCRLF() ?: throw NullPointerException("Header 读取中断！")
@@ -94,13 +141,24 @@ class RequestReader(
             }
             header[headerSpit[0]] = URLDecoder.decode(headerSpit[1].trim(), charset.name())
         }
-//     开始读取 POST 表单数据
-        if (method == METHOD.POST) {
+        printHeader()
+    }
+
+    /**
+     * 解析 POST表单
+     *
+     * 此函数用于解析 HTTP 的请求表单
+     *
+     * @param loader Map<String, KClass<out RequestBodyLoader>> 解析方案
+     */
+    fun loadBody(loader: Map<String, KClass<out RequestBodyLoader>>) {
+        //     开始读取 POST 表单数据
+        if (methodData.type == METHOD.POST) {
             if (tempFolder.isDirectory.not()) {
                 tempFolder.mkdirs()
             }
-            val outputStream = DataReaderOutputStream(File(tempFolder, "$sessionId-post.raw"))
-            val bytes = ByteArray(1024)
+            val outputStream = tempBlockCreateFunc("post")
+            val bytes = ByteArray(WebServer.CACHE_SIZE)
             while (reader.available() > 0) {
                 outputStream.write(bytes, 0, reader.read(bytes, 0, bytes.size))
             }
@@ -110,45 +168,84 @@ class RequestReader(
                     throw BadRequestException("POST 表单的实际长度低于 HEADER 标明长度. [${rawFormData.size} < ${it.length}]")
                 }
             }
-        } else {
-            rawFormData = ByteArrayDataReader(urlData.toByteArray())
         }
-    }
-
-    fun loadBody(loader: Map<String, KClass<out RequestBodyLoader>>) {
         if (methodData.type == METHOD.POST) {
-            val keys = loader.keys
-            logger.debugOnly {
-                it.debug("可解析的POST类型：$keys")
+            var findKClass: KClass<out RequestBodyLoader>? = null
+            val contentType = header["Content-Type"] ?: throw BadRequestException("请求为POST但未知请求类型（未发现Content-Type字段）.")
+            logger.debug("Content-Type:$contentType")
+            synchronized(loader) {
+                val keys = loader.keys
+                // 解析POST 请求的表单
+                logger.debugOnly {
+                    it.debug("当前Content-Type解析方案：$keys")
+                }
+                for (key in keys) {
+                    if (contentType.toLowerCase().contains(key)) {
+                        findKClass = loader[key]
+                        break
+                    }
+                }
             }
-            val contentType = BadRequestException("请求为POST但是为止请求类型（未发现Content-Type字段）.")
-            header["Content-Type"]?:throw contentType
-            var findKClass: KClass<out BaseDataReader>? = null
-            for (key in keys) {
+            if (findKClass == null) {
+                logger.debug("未找到适合Content-Type解析方案:[$contentType].")
+            } else {
+                @SuppressWarnings("TooGenericExceptionCaught")
+                // 压制 `deteKT` 的警告信息
+                val requestBodyLoader = try {
+                    val webLogger = WebLogger(findKClass!!.java)
+                    webLogger.remoteAddress = logger.remoteAddress
+                    findKClass!!.javaObjectType.getConstructor(WebLogger::class.java).newInstance(webLogger)
+                } catch (e: Exception) {
+                    throw WebServerInternalException("在创建表单解析方案时出现错误！", e)
+                }
+                bodyLoader = requestBodyLoader
+                if (requestBodyLoader.load(methodData.location, header, rawFormData, formData, tempBlockCreateFunc)) {
+                    logger.debug("表单处理完成.")
+                    printBody()
+                } else {
+                    throw BadRequestException("表单解析错误，具体信息需查看日志.")
+                }
+            }
 
-            }
+            //
         } else {
-            logger.debug("执行到#loadBody()方法，但是此会话为 GET")
+            logger.debug("执行到#loadBody()方法，但是此会话为 GET 请求.")
         }
     }
 
+    @SuppressWarnings("TooGenericExceptionCaught") // 压制 deteKt 警告信息
     override fun close() {
-        reader.safeClose()
-        rawFormData.safeClose()
-        for (value in formData.values) {
-            value.safeClose()
+        bodyLoader.safeClose() // 销毁POST解析工具（如果有）
+        closeableLinkedList.forEach {
+            try {
+                it.close()
+            } catch (e: Exception) {
+                logger.debug("$it 关闭失败！")
+            }
+        } // 销毁创建的临时文件
+        closeableLinkedList.clear()
+        rawFormData.safeClose() // 清空POST 表单
+        synchronized(formData) {
+            for (value in formData.values) {
+                value.safeClose()
+            }
         }
         header.clear()
         formData.clear()
+        reader.safeClose()
     }
 
-    fun printInfo(logger: WebLogger) {
-        logger.info("ACCEPT [$methodData]")
+    private fun printHeader() {
         logger.debugOnly {
             header.forEach { (t, u) ->
                 logger.debug("HEADER(name=\"$t\",value=\"$u\").")
             }
             logger.debug("HEADER.length:${header.size} .")
+        }
+    }
+
+    private fun printBody() {
+        logger.debugOnly {
             formData.forEach { (t, u) ->
                 logger.debug("BODY(name=\"$t\",data=\"$u\")")
             }
