@@ -1,21 +1,27 @@
 package tech.openedgn.net.server.web.io
 
 import tech.openEdgn.tools4k.safeClose
+import tech.openedgn.net.server.web.bean.NetworkInfo
+import tech.openedgn.net.server.web.config.WebConfig
 import tech.openedgn.net.server.web.data.METHOD
-import tech.openedgn.net.server.web.utils.BaseDataReader
+import tech.openedgn.net.server.web.error.ClosedException
+import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
 import java.io.IOException
 import java.util.LinkedList
 import kotlin.collections.HashMap
 
-abstract class BaseRequestReader : IRequestReader {
+abstract class BaseRequestReader(
+    final override val remoteAddress: NetworkInfo,
+    protected val webConfig: WebConfig
+) : IRequestReader {
     override lateinit var sessionId: String
     override lateinit var method: METHOD
     override lateinit var location: String
     override lateinit var httpVersion: String
     override val headers = HashMap<String, String>()
-    override val forms = HashMap<String, BaseDataReader>()
+    override val forms = HashMap<String, IDataBlock>()
     /**
      * 自动销毁模块寄存
      */
@@ -42,6 +48,8 @@ abstract class BaseRequestReader : IRequestReader {
             forms.clear()
         }.registerCloseable()
         // 注册销毁表单的事件
+        logger.remoteAddress = remoteAddress.toString()
+        // 日志分块
     }
 
     protected fun <T : Closeable> T.registerCloseable(): T {
@@ -62,5 +70,4 @@ abstract class BaseRequestReader : IRequestReader {
         closeList.clear()
     }
 
-    class ClosedException(message: String) : IOException(message)
 }

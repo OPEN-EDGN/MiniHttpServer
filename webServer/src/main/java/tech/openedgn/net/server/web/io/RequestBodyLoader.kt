@@ -1,8 +1,8 @@
 package tech.openedgn.net.server.web.io
 
 import tech.openedgn.net.server.web.error.WebServerInternalException
-import tech.openedgn.net.server.web.utils.BaseDataReader
-import tech.openedgn.net.server.web.utils.DataReaderOutputStream
+import tech.openedgn.net.server.web.utils.IDataBlock
+import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
 import kotlin.reflect.KClass
@@ -17,17 +17,17 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
      * 此方法用于读取POST的表单数据
      * @param location String 请求地址
      * @param header Map<String, String> 头部信息
-     * @param dataReader BaseDataReader 原始POST 数据
-     * @param reader HashMap<String, BaseDataReader> 存入的POST 表单位置
+     * @param dataBlock BaseDataReader 原始POST 数据
+     * @param block HashMap<String, BaseDataReader> 存入的POST 表单位置
      * @param tempFileCreateFun Function1<[@kotlin.ParameterName] String, DataReaderOutputStream> 临时数据存储创建函数
      * @return Boolean
      */
     abstract fun load(
         location: String,
         header: Map<String, String>,
-        dataReader: BaseDataReader,
-        reader: HashMap<String, BaseDataReader>,
-        tempFileCreateFun: (name: String) -> DataReaderOutputStream
+        dataBlock: IDataBlock,
+        block: HashMap<String, IDataBlock>,
+        tempFileCreateFun: (name: String) -> DataBlockOutputStream
     ): Boolean
 
     companion object {
@@ -57,9 +57,9 @@ class FormDataBodyLoader(logger: WebLogger) : BaseRequestBodyLoader(logger) {
     override fun load(
         location: String,
         header: Map<String, String>,
-        dataReader: BaseDataReader,
-        reader: HashMap<String, BaseDataReader>,
-        tempFileCreateFun: (name: String) -> DataReaderOutputStream
+        dataBlock: IDataBlock,
+        block: HashMap<String, IDataBlock>,
+        tempFileCreateFun: (name: String) -> DataBlockOutputStream
     ): Boolean {
         logger.info("OK")
         return true

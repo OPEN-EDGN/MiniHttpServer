@@ -1,6 +1,6 @@
 package tech.openedgn.net.server.web.io
 
-import tech.openedgn.net.server.web.utils.BaseDataReader
+import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.data.METHOD
 import tech.openedgn.net.server.web.data.MethodData
 import tech.openedgn.net.server.web.error.HeaderFormatException
@@ -10,8 +10,8 @@ import tech.openedgn.net.server.web.utils.decodeFormData
 import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.error.BadRequestException
-import tech.openedgn.net.server.web.utils.ByteArrayDataReader
-import tech.openedgn.net.server.web.utils.DataReaderOutputStream
+import tech.openedgn.net.server.web.utils.ByteArrayDataBlock
+import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
@@ -58,11 +58,11 @@ class OldRequestReader(
     /**
      * 表单
      */
-    val formData = HashMap<String, BaseDataReader>()
+    val formData = HashMap<String, IDataBlock>()
     /**
      * 原始的表单数据
      */
-    lateinit var rawFormData: BaseDataReader
+    lateinit var rawFormData: IDataBlock
 
     private var bodyLoaderBase: BaseRequestBodyLoader? = null
 
@@ -75,13 +75,13 @@ class OldRequestReader(
         return this
     }
 
-    private val hookFunc: (BaseDataReader) -> Unit = { it.autoClose() }
+    private val hookFunc: (IDataBlock) -> Unit = { it.autoClose() }
 
     /**
      * 建立临时文件
      */
-    val tempBlockCreateFunc: (name: String) -> DataReaderOutputStream = {
-        val dataReaderOutputStream = DataReaderOutputStream(
+    val tempBlockCreateFunc: (name: String) -> DataBlockOutputStream = {
+        val dataReaderOutputStream = DataBlockOutputStream(
                 File(tempFolder, "temp-$sessionId-$it-${System.nanoTime()}.tmp"),
                 WebServer.MEMORY_CACHE_SIZE,
                 hookFunc)
@@ -159,7 +159,7 @@ class OldRequestReader(
                 URLDecoder.decode(location, charset.name()),
                 methodSplit[2].toLowerCase()
         )
-        rawFormData = ByteArrayDataReader(urlData.toByteArray())
+        rawFormData = ByteArrayDataBlock(urlData.toByteArray())
         // 读取method 结束
     }
 
