@@ -81,6 +81,13 @@ class WebServer @JvmOverloads constructor(
                 WebLoggerConfig.loggerOutputHook = value
             }
 
+        /**
+         * 流的最大缓存大小
+         */
         const val CACHE_SIZE = 1024
+        /**
+         * 最大内存的缓存大小
+         */
+        const val MEMORY_CACHE_SIZE = CACHE_SIZE * 4
     }
 }

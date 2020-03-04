@@ -1,15 +1,16 @@
 package tech.openedgn.net.server.web.io
 
+import tech.openedgn.net.server.web.error.WebServerInternalException
 import tech.openedgn.net.server.web.utils.BaseDataReader
 import tech.openedgn.net.server.web.utils.DataReaderOutputStream
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
-import java.io.File
+import kotlin.reflect.KClass
 
 /**
  *  此方法用于读取POST表单,每次会自动创建新的实例
  */
-abstract class RequestBodyLoader(protected val logger: WebLogger) : Closeable {
+abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeable {
     /**
      * 读取表单的数据方法
      *
@@ -28,9 +29,30 @@ abstract class RequestBodyLoader(protected val logger: WebLogger) : Closeable {
         reader: HashMap<String, BaseDataReader>,
         tempFileCreateFun: (name: String) -> DataReaderOutputStream
     ): Boolean
+
+    companion object {
+        /**
+         *  創建新的 POST 解析類
+         */
+        @Throws(WebServerInternalException::class)
+        fun createNewDataBodyLoader(
+            clazz: KClass<out BaseRequestBodyLoader>,
+            loggerTag: String
+        ): BaseRequestBodyLoader {
+            try {
+                val webLogger = WebLogger(clazz.java)
+                webLogger.remoteAddress = loggerTag
+                return clazz.javaObjectType.getConstructor(WebLogger::class.java).newInstance(webLogger)
+            } catch (e: NoSuchMethodException) {
+                throw WebServerInternalException("构造函数存在问题！", e)
+            } catch (e: InstantiationException) {
+                throw WebServerInternalException("在创建對象時出现错误！", e)
+            }
+        }
+    }
 }
 
-class FormDataBodyLoader(logger: WebLogger) : RequestBodyLoader(logger) {
+class FormDataBodyLoader(logger: WebLogger) : BaseRequestBodyLoader(logger) {
 
     override fun load(
         location: String,

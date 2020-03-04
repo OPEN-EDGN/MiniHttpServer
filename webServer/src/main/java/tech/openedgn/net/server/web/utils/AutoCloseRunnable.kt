@@ -26,7 +26,7 @@ abstract class AutoCloseRunnable : Runnable {
             execute()
         } catch (e: WebServerInternalException) {
             logger.error("内部错误!")
-            logger.error(e.mess,e.throwable)
+            logger.error(e.mess, e.throwable)
         } catch (e: HttpException) {
             logger.warn(e.message)
         } catch (e: Exception) {

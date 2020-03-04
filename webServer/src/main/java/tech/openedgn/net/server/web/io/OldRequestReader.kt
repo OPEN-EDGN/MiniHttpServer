@@ -6,39 +6,43 @@ import tech.openedgn.net.server.web.data.MethodData
 import tech.openedgn.net.server.web.error.HeaderFormatException
 import tech.openedgn.net.server.web.error.MethodFormatException
 import tech.openedgn.net.server.web.utils.BufferedInputStream
-import tech.openedgn.net.server.web.utils.WebLogger
 import tech.openedgn.net.server.web.utils.decodeFormData
 import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.WebServer
-import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.error.BadRequestException
-import tech.openedgn.net.server.web.error.WebServerInternalException
 import tech.openedgn.net.server.web.utils.ByteArrayDataReader
 import tech.openedgn.net.server.web.utils.DataReaderOutputStream
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
+import java.io.IOException
 import java.io.InputStream
-import java.lang.NullPointerException
 import java.net.URLDecoder
 import java.nio.charset.Charset
-import java.util.*
+import java.util.LinkedList
+import java.util.UUID
+
 import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
-class RequestReader(
+class OldRequestReader(
     inputStream: InputStream,
     private val charset: Charset,
-    private val networkInfo: NetworkInfo,
+    private val loggerTag: String,
     private val tempFolder: File
 ) : Closeable {
     companion object {
         const val METHOD_SPIT_SIZE = 3
     }
 
+    private val logger = getWebLogger()
+
+    init {
+        logger.remoteAddress = loggerTag
+    }
+
     private val reader = BufferedInputStream(inputStream)
 
-    private val logger = getWebLogger()
     /**
      * 会话 ID
      */
@@ -60,7 +64,7 @@ class RequestReader(
      */
     lateinit var rawFormData: BaseDataReader
 
-    private var bodyLoader: RequestBodyLoader? = null
+    private var bodyLoaderBase: BaseRequestBodyLoader? = null
 
     private val closeableLinkedList = LinkedList<Closeable>()
 
@@ -73,23 +77,52 @@ class RequestReader(
 
     private val hookFunc: (BaseDataReader) -> Unit = { it.autoClose() }
 
+    /**
+     * 建立临时文件
+     */
     val tempBlockCreateFunc: (name: String) -> DataReaderOutputStream = {
         val dataReaderOutputStream = DataReaderOutputStream(
                 File(tempFolder, "temp-$sessionId-$it-${System.nanoTime()}.tmp"),
-                WebServer.CACHE_SIZE,
+                WebServer.MEMORY_CACHE_SIZE,
                 hookFunc)
         dataReaderOutputStream.autoClose()
-    }
-
-    init {
-        logger.remoteAddress = networkInfo.toString()
     }
 
     /**
      * 读取表头信息
      */
     fun loadHeader() {
-        val methodLine = reader.readLineEndWithCRLF() ?: throw NullPointerException("METHOD 读取中断！")
+        readMethod(reader.readLineEndWithCRLF() ?: throw IOException("METHOD 读取中断！"))
+        // 解析 METHOD
+        logger.info("ACCEPT [$methodData]")
+        readHeader()
+        // 解析 HEADER 頭標籤
+        printHeaderInfo()
+        // 打印HEADER 信息
+    }
+
+    /**
+     * 解析 POST表单
+     *
+     * 此函数用于解析 HTTP 的请求表单
+     *
+     * @param loaderBase Map<String, KClass<out RequestBodyLoader>> 解析方案
+     */
+    fun loadBody(loaderBase: Map<String, KClass<out BaseRequestBodyLoader>>) {
+        //     开始读取 POST 表单数据
+        if (methodData.type == METHOD.POST) {
+            saveAllBodyData()
+            decodeBodyData(loaderBase)
+            printBodyInfo()
+        } else {
+            logger.debug("此会话为 GET 请求，不解析尾部表单.")
+        }
+    }
+
+    /**
+     * 从流中读取 METHOD 信息
+     */
+    fun readMethod(methodLine: String) {
         if (methodLine.matches(Regex("^(GET|POST)\\s(/)(.*)\\s\\w{4}(/).+$")).not()) {
             throw MethodFormatException(methodLine)
         }
@@ -127,10 +160,15 @@ class RequestReader(
                 methodSplit[2].toLowerCase()
         )
         rawFormData = ByteArrayDataReader(urlData.toByteArray())
-        logger.info("ACCEPT [$methodData]")
         // 读取method 结束
+    }
+
+    /**
+     * 读取 HEADER 信息
+     */
+    fun readHeader() {
         while (true) {
-            val line = reader.readLineEndWithCRLF() ?: throw NullPointerException("Header 读取中断！")
+            val line = reader.readLineEndWithCRLF() ?: throw IOException("Header 读取中断！")
             if (line.isEmpty()) {
                 break
                 // 代表Header已经全部读取完成
@@ -141,81 +179,65 @@ class RequestReader(
             }
             header[headerSpit[0]] = URLDecoder.decode(headerSpit[1].trim(), charset.name())
         }
-        printHeader()
     }
 
     /**
-     * 解析 POST表单
-     *
-     * 此函数用于解析 HTTP 的请求表单
-     *
-     * @param loader Map<String, KClass<out RequestBodyLoader>> 解析方案
+     * 将原始的 POST 数据保存到缓存中
      */
-    fun loadBody(loader: Map<String, KClass<out RequestBodyLoader>>) {
-        //     开始读取 POST 表单数据
-        if (methodData.type == METHOD.POST) {
-            if (tempFolder.isDirectory.not()) {
-                tempFolder.mkdirs()
+    fun saveAllBodyData() {
+        if (tempFolder.isDirectory.not()) {
+            tempFolder.mkdirs()
+        }
+        // 建立临时文件
+        val outputStream = tempBlockCreateFunc("post")
+        val bytes = ByteArray(WebServer.CACHE_SIZE)
+        while (reader.available() > 0) {
+            outputStream.write(bytes, 0, reader.read(bytes, 0, bytes.size))
+        }
+        rawFormData = outputStream.openDataReader()
+        header["Content-Length"]?.let {
+            if (rawFormData.size < it.toLong()) {
+                throw BadRequestException("POST 表单的实际长度低于 HEADER 标明长度. [${rawFormData.size} < ${it.length}]")
             }
-            val outputStream = tempBlockCreateFunc("post")
-            val bytes = ByteArray(WebServer.CACHE_SIZE)
-            while (reader.available() > 0) {
-                outputStream.write(bytes, 0, reader.read(bytes, 0, bytes.size))
+        }
+    }
+
+    /**
+     * 解析表单信息
+     */
+    fun decodeBodyData(loaderBase: Map<String, KClass<out BaseRequestBodyLoader>>) {
+        var findKClass: KClass<out BaseRequestBodyLoader>? = null
+        val contentType = header["Content-Type"] ?: throw BadRequestException("请求为POST但未知请求类型（未发现Content-Type字段）.")
+        logger.debug("Content-Type:$contentType")
+        synchronized(loaderBase) {
+            val keys = loaderBase.keys
+            // 解析POST 请求的表单
+            logger.debugOnly {
+                it.debug("当前Content-Type解析方案：$keys")
             }
-            rawFormData = outputStream.openDataReader()
-            header["Content-Length"]?.let {
-                if (rawFormData.size < it.toLong()) {
-                    throw BadRequestException("POST 表单的实际长度低于 HEADER 标明长度. [${rawFormData.size} < ${it.length}]")
+            for (key in keys) {
+                if (contentType.toLowerCase().contains(key)) {
+                    findKClass = loaderBase[key]
+                    break
                 }
             }
         }
-        if (methodData.type == METHOD.POST) {
-            var findKClass: KClass<out RequestBodyLoader>? = null
-            val contentType = header["Content-Type"] ?: throw BadRequestException("请求为POST但未知请求类型（未发现Content-Type字段）.")
-            logger.debug("Content-Type:$contentType")
-            synchronized(loader) {
-                val keys = loader.keys
-                // 解析POST 请求的表单
-                logger.debugOnly {
-                    it.debug("当前Content-Type解析方案：$keys")
-                }
-                for (key in keys) {
-                    if (contentType.toLowerCase().contains(key)) {
-                        findKClass = loader[key]
-                        break
-                    }
-                }
-            }
-            if (findKClass == null) {
-                logger.debug("未找到适合Content-Type解析方案:[$contentType].")
+        if (findKClass != null) {
+            val requestBodyLoader = BaseRequestBodyLoader.createNewDataBodyLoader(findKClass!!, loggerTag)
+            bodyLoaderBase = requestBodyLoader
+            if (requestBodyLoader.load(methodData.location, header, rawFormData, formData, tempBlockCreateFunc)) {
+                logger.debug("表单处理完成.")
             } else {
-                @SuppressWarnings("TooGenericExceptionCaught")
-                // 压制 `deteKT` 的警告信息
-                val requestBodyLoader = try {
-                    val webLogger = WebLogger(findKClass!!.java)
-                    webLogger.remoteAddress = logger.remoteAddress
-                    findKClass!!.javaObjectType.getConstructor(WebLogger::class.java).newInstance(webLogger)
-                } catch (e: Exception) {
-                    throw WebServerInternalException("在创建表单解析方案时出现错误！", e)
-                }
-                bodyLoader = requestBodyLoader
-                if (requestBodyLoader.load(methodData.location, header, rawFormData, formData, tempBlockCreateFunc)) {
-                    logger.debug("表单处理完成.")
-                    printBody()
-                } else {
-                    throw BadRequestException("表单解析错误，具体信息需查看日志.")
-                }
+                throw BadRequestException("表单解析错误，具体信息需查看日志.")
             }
-
-            //
         } else {
-            logger.debug("执行到#loadBody()方法，但是此会话为 GET 请求.")
+            logger.debug("未找到适合Content-Type解析方案:[$contentType].")
         }
     }
 
     @SuppressWarnings("TooGenericExceptionCaught") // 压制 deteKt 警告信息
     override fun close() {
-        bodyLoader.safeClose() // 销毁POST解析工具（如果有）
+        bodyLoaderBase.safeClose() // 销毁POST解析工具（如果有）
         closeableLinkedList.forEach {
             try {
                 it.close()
@@ -235,7 +257,10 @@ class RequestReader(
         reader.safeClose()
     }
 
-    private fun printHeader() {
+    /**
+     * 打印 HEADER 日誌
+     */
+    private fun printHeaderInfo() {
         logger.debugOnly {
             header.forEach { (t, u) ->
                 logger.debug("HEADER(name=\"$t\",value=\"$u\").")
@@ -244,7 +269,10 @@ class RequestReader(
         }
     }
 
-    private fun printBody() {
+    /**
+     * 打印表單數據
+     */
+    private fun printBodyInfo() {
         logger.debugOnly {
             formData.forEach { (t, u) ->
                 logger.debug("BODY(name=\"$t\",data=\"$u\")")

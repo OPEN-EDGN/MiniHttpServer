@@ -1,7 +1,7 @@
 package tech.openedgn.net.server.web.thread
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.config.WebConfig
-import tech.openedgn.net.server.web.io.RequestReader
+import tech.openedgn.net.server.web.io.OldRequestReader
 import tech.openedgn.net.server.web.utils.AutoCloseRunnable
 import java.net.Socket
 
@@ -11,10 +11,10 @@ class ClientRunnable(
     private val webConfig: WebConfig
 ) : AutoCloseRunnable() {
     private val httpReader by lazy {
-        RequestReader(
+        OldRequestReader(
                 client.getInputStream(),
                 webConfig.charset,
-                networkInfo,
+                networkInfo.toString(),
                 webConfig.tempFolder
         ).registerAutoClose()
     }
@@ -26,7 +26,6 @@ class ClientRunnable(
 
     override fun execute() {
         httpReader.loadHeader()
-        httpReader.loadBody(webConfig.requestBodyLoader)
-
+        httpReader.loadBody(webConfig.baseRequestBodyLoader)
     }
 }
