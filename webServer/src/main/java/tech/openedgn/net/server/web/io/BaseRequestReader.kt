@@ -8,15 +8,15 @@ import tech.openedgn.net.server.web.error.ClosedException
 import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
-import java.io.IOException
 import java.util.LinkedList
+import java.util.UUID
 import kotlin.collections.HashMap
 
 abstract class BaseRequestReader(
     final override val remoteAddress: NetworkInfo,
     protected val webConfig: WebConfig
 ) : IRequestReader {
-    override lateinit var sessionId: String
+    override val sessionId: String = UUID.randomUUID().toString()
     override lateinit var method: METHOD
     override lateinit var location: String
     override lateinit var httpVersion: String
@@ -69,5 +69,4 @@ abstract class BaseRequestReader(
         } // 销毁对象
         closeList.clear()
     }
-
 }
