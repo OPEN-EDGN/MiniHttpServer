@@ -6,12 +6,12 @@ import tech.openedgn.net.server.web.data.MethodData
 import tech.openedgn.net.server.web.error.HeaderFormatException
 import tech.openedgn.net.server.web.error.MethodFormatException
 import tech.openedgn.net.server.web.utils.BufferedInputStream
-import tech.openedgn.net.server.web.utils.decodeFormData
 import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.error.BadRequestException
 import tech.openedgn.net.server.web.utils.ByteArrayDataBlock
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
+import tech.openedgn.net.server.web.utils.DecodeUtils
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
@@ -146,7 +146,7 @@ class OldRequestReader(
         }
         // 解析出所有url下键值对
         if (method == METHOD.GET && urlData.isNotEmpty()) {
-            logger.decodeFormData(urlData, formData, charset)
+            DecodeUtils.decodeFormData(urlData, formData,logger)
             // 解析 GET 附加表单
         } else if (urlData.isNotEmpty()) {
             logger.debug("在[$method]下已自动排除url中带的表单数据:{$urlData}")

@@ -1,5 +1,6 @@
 package tech.openedgn.net.server.web.io
 
+import tech.openedgn.net.server.web.error.BadRequestException
 import tech.openedgn.net.server.web.error.WebServerInternalException
 import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
@@ -49,6 +50,29 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
                 throw WebServerInternalException("在创建對象時出现错误！", e)
             }
         }
+    }
+
+    /**
+     *  判定解析方案
+     */
+    fun searchRequestBodyLoader(
+        headers: Map<String, String>,
+        loader: Map<String, KClass<out BaseRequestBodyLoader>>,
+        logger: WebLogger
+    ): KClass<out BaseRequestBodyLoader>? {
+        val contentType = headers["Content-Type"] ?: throw BadRequestException("请求为POST但未知请求类型（未发现Content-Type字段）.")
+        logger.debug("Content-Type:$contentType")
+        val keys = loader.keys
+        // 解析POST 请求的表单
+        logger.debugOnly {
+            it.debug("当前所有Content-Type解析方案：$keys")
+        }
+        for (key in keys) {
+            if (contentType.toLowerCase().contains(key)) {
+                return loader[key]
+            }
+        }
+        return null
     }
 }
 

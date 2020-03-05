@@ -39,6 +39,10 @@ interface IRequestReader : Closeable {
     val forms: Map<String, IDataBlock>
 
     /**
+     * 原始表單數據
+     */
+    val rawFormData: IDataBlock
+    /**
      * 读取METHOD 和 location 的抽象方法
      */
     fun loadMethod()

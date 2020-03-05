@@ -1,13 +1,16 @@
 package tech.openedgn.net.server.web.io
 
 import tech.openEdgn.tools4k.safeClose
+import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.config.WebConfig
 import tech.openedgn.net.server.web.data.METHOD
 import tech.openedgn.net.server.web.error.ClosedException
+import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
+import java.io.File
 import java.util.LinkedList
 import java.util.UUID
 import kotlin.collections.HashMap
@@ -22,10 +25,21 @@ abstract class BaseRequestReader(
     override lateinit var httpVersion: String
     override val headers = HashMap<String, String>()
     override val forms = HashMap<String, IDataBlock>()
+    override lateinit var rawFormData: IDataBlock
     /**
      * 自动销毁模块寄存
      */
     protected val closeList = LinkedList<Closeable>()
+    /**
+     * 临时數據塊存儲方案
+     */
+    protected val tempBlockCreateFunc: (name: String) -> DataBlockOutputStream = {
+        val dataReaderOutputStream = DataBlockOutputStream(
+            File(webConfig.tempFolder, "temp-$sessionId-$it-${System.nanoTime()}.tmp"),
+            WebServer.MEMORY_CACHE_SIZE
+        ) { it.registerCloseable() }
+        dataReaderOutputStream.registerCloseable()
+    }
     /**
      * 此对象是否关闭
      */
@@ -42,6 +56,8 @@ abstract class BaseRequestReader(
         }.registerCloseable()
         // 注册清空 header的事件
         Closeable {
+            rawFormData.safeClose()
+            // 原始表单数据的清除
             forms.values.forEach {
                 it.safeClose()
             }
