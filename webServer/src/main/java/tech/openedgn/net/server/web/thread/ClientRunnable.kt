@@ -26,6 +26,6 @@ class ClientRunnable(
 
     override fun execute() {
         httpReader.loadHeader()
-        httpReader.loadBody(webConfig.baseRequestBodyLoader)
+        httpReader.loadBody(webConfig.requestBodyLoader)
     }
 }

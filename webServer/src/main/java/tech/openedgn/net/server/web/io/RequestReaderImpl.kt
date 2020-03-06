@@ -107,8 +107,10 @@ class RequestReaderImpl(
                 }
             }
             // 將 POST 數據保存到數據塊下
-            var findKClass: KClass<out BaseRequestBodyLoader>? = null
-            
+            var findKClass: KClass<out BaseRequestBodyLoader>? =
+                BaseRequestBodyLoader.searchRequestBodyLoader(headers,
+                    webConfig.requestBodyLoader,
+                    logger)
         } else {
             logger.warn("此会话并非 POST 请求，此方法不应该被调用.")
         }

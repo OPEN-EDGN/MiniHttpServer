@@ -50,7 +50,7 @@ class WebConfig(val serverPort: Int) : Closeable {
     @Volatile
     var charset: Charset = Charsets.UTF_8
 
-    val baseRequestBodyLoader: ConcurrentHashMap<String, KClass<out BaseRequestBodyLoader>> =
+    val requestBodyLoader: ConcurrentHashMap<String, KClass<out BaseRequestBodyLoader>> =
             ConcurrentHashMap(mapOf(
                     Pair("multipart/form-data", FormDataBodyLoader::class)
             ))
