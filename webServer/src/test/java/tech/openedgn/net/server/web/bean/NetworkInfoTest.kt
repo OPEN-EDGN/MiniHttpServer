@@ -22,10 +22,9 @@ class NetworkInfoTest {
 
     @Test
     fun initTest() {
-        val assertThrows = assertThrows<IOException>("抛出未知IP错误") {
+         assertThrows<IOException>("抛出未知IP错误") {
             NetworkInfo(UNKNOWN_IP_ADDRESS, CUSTOM_PORT)
         }
-        assertEquals(assertThrows.message, "[$UNKNOWN_IP_ADDRESS] 格式错误. (Unrecognized)")
     }
 
     @Test
