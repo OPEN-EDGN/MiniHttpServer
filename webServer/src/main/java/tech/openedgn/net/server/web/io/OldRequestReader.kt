@@ -25,6 +25,7 @@ import java.util.UUID
 import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
+@Deprecated("以前的HTTP解析方案")
 class OldRequestReader(
     inputStream: InputStream,
     private val charset: Charset,

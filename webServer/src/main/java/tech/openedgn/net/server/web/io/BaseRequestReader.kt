@@ -37,7 +37,7 @@ abstract class BaseRequestReader(
         val dataReaderOutputStream = DataBlockOutputStream(
             File(webConfig.tempFolder, "temp-$sessionId-$it-${System.nanoTime()}.tmp"),
             WebServer.MEMORY_CACHE_SIZE
-        ) { it.registerCloseable() }
+        ) { d -> d.registerCloseable() }
         dataReaderOutputStream.registerCloseable()
     }
     /**
@@ -51,18 +51,6 @@ abstract class BaseRequestReader(
     protected val logger = WebLogger(javaClass)
 
     init {
-        Closeable {
-            headers.clear()
-        }.registerCloseable()
-        // 注册清空 header的事件
-        Closeable {
-            rawFormData.safeClose()
-            // 原始表单数据的清除
-            forms.values.forEach {
-                it.safeClose()
-            }
-            forms.clear()
-        }.registerCloseable()
         // 注册销毁表单的事件
         logger.remoteAddress = remoteAddress.toString()
         // 日志分块
@@ -79,6 +67,15 @@ abstract class BaseRequestReader(
     }
 
     override fun close() {
+        headers.clear()
+        // 注册清空 header的事件
+        rawFormData.safeClose()
+        // 原始表单数据的清除
+        forms.values.forEach {
+            it.safeClose()
+            // 清空 POST 表单
+        }
+        forms.clear()
         closeable = true
         closeList.forEach {
             it.safeClose()

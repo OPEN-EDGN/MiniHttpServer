@@ -99,8 +99,9 @@ class RequestReaderImpl(
                 outputStream.write(bytes, 0, requestReader.read(bytes, 0, bytes.size))
             }
             rawFormData = outputStream.openDataReader()
+            logger.debug("表单块信息：$rawFormData")
             headers["Content-Length"]?.let {
-                if (rawFormData.size < it.toLong()) {
+                if (rawFormData.size < it.trim().toLong()) {
                     throw BadRequestException("POST 表单的实际长度低于 HEADER 标明长度. [${rawFormData.size} < ${it.length}]")
                 }
             }

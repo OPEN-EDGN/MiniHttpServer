@@ -178,7 +178,7 @@ enum class ContentType(val fileType: String, val application: String) {
     TYPE_X_906(".906", "application/x-906"),
     TYPE_X_A11(".a11", "application/x-a11"),
     TYPE_X_ANV(".anv", "application/x-anv"),
-    TYPE_X_BITTORRENT(".torren", "tapplication/x-bittorrent"),
+    TYPE_X_BITTORRENT(".torrent", "tapplication/x-bittorrent"),
     TYPE_X_BMP(".bmp", "application/x-bmp"),
     TYPE_X_BOT(".bot", "application/x-bot"),
     TYPE_X_C4T(".c4t", "application/x-c4t"),

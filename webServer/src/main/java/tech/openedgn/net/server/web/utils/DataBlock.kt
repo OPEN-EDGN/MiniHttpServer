@@ -204,6 +204,7 @@ class DataBlockOutputStream(
 
     private val lock = Any()
 
+    @Volatile
     private var output: OutputStream = ByteArrayOutputStream(maxMemorySize)
 
     private var closed = false
@@ -214,20 +215,18 @@ class DataBlockOutputStream(
     private var checkFile = false
     // 是否将缓存切换成本地储存
 
-    private var size = 0
+    private var size = 0L
     // 内存的缓存大小
 
     private fun checkSize(i: Int) {
         if (closed) {
             throw ClosedException("OutputStream Closed.")
         }
-        if (size < maxMemorySize) {
-            size += i
-        }
+        size += i
         if (size > maxMemorySize && checkFile.not()) {
             checkFile = true
             val fileOutputStream = FileOutputStream(tempFile)
-            (output as ByteArrayOutputStream).writeTo(fileOutputStream)
+            fileOutputStream.write((output as ByteArrayOutputStream).toByteArray())
             output = fileOutputStream
         }
     }

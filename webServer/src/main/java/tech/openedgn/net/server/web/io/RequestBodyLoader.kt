@@ -6,7 +6,6 @@ import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
-import java.util.logging.Logger
 import kotlin.reflect.KClass
 
 /**
@@ -51,14 +50,17 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
                 throw WebServerInternalException("在创建對象時出现错误！", e)
             }
         }
+
         /**
          *  判定解析方案
          */
         fun searchRequestBodyLoader(
             headers: Map<String, String>,
             loader: Map<String, KClass<out BaseRequestBodyLoader>>,
-            logger: WebLogger
+            oldLogger: WebLogger
         ): KClass<out BaseRequestBodyLoader>? {
+            val logger = WebLogger(BaseRequestBodyLoader::class.java)
+            logger.remoteAddress = oldLogger.remoteAddress
             val contentType = headers["Content-Type"] ?: throw BadRequestException("请求为POST但未知请求类型（未发现Content-Type字段）.")
             logger.debug("Content-Type:$contentType")
             val keys = loader.keys
@@ -74,10 +76,29 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
             return null
         }
     }
-
-
 }
 
+/**
+ *  读取 Content-Type 为  multipart/form-data 的数据
+ *
+ *  一个最简单的表单如下所示：
+ *
+ *  ```http
+ *   Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+ *   \r\n
+ *   ------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+ *   Content-Disposition: form-data; name="text_form"\r\n
+ *   \r\n
+ *   data\r\n
+ *   ------WebKitFormBoundary7MA4YWxkTrZu0gW\r\n
+ *   Content-Disposition: form-data; name="file_form"; filename="hello.txt"\r\n
+ *   Content-Type: text/plain\r\n
+ *   \r\n
+ *   data\r\n
+ *   ------WebKitFormBoundary7MA4YWxkTrZu0gW--
+ *  ```
+ *
+ */
 class FormDataBodyLoader(logger: WebLogger) : BaseRequestBodyLoader(logger) {
 
     override fun load(
