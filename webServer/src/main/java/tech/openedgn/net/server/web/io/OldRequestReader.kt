@@ -223,7 +223,7 @@ class OldRequestReader(
             }
         }
         if (findKClass != null) {
-            val requestBodyLoader = BaseRequestBodyLoader.createNewDataBodyLoader(findKClass!!, loggerTag)
+            val requestBodyLoader = BaseRequestBodyLoader.createNewDataBodyLoader(findKClass!!, logger)
             bodyLoaderBase = requestBodyLoader
             if (requestBodyLoader.load(methodData.location, header, rawFormData, formData, tempBlockCreateFunc)) {
                 logger.debug("表单处理完成.")

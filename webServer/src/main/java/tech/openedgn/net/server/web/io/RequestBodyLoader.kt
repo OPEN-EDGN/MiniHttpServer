@@ -6,6 +6,7 @@ import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
+import java.util.logging.Logger
 import kotlin.reflect.KClass
 
 /**
@@ -38,11 +39,11 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
         @Throws(WebServerInternalException::class)
         fun createNewDataBodyLoader(
             clazz: KClass<out BaseRequestBodyLoader>,
-            loggerTag: String
+            logger: WebLogger
         ): BaseRequestBodyLoader {
             try {
                 val webLogger = WebLogger(clazz.java)
-                webLogger.remoteAddress = loggerTag
+                webLogger.remoteAddress = logger.remoteAddress
                 return clazz.javaObjectType.getConstructor(WebLogger::class.java).newInstance(webLogger)
             } catch (e: NoSuchMethodException) {
                 throw WebServerInternalException("构造函数存在问题！", e)

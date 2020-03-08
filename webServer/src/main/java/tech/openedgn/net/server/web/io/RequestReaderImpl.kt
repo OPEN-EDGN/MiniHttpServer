@@ -91,9 +91,7 @@ class RequestReaderImpl(
     override fun loadBody() {
         choosePointer(RequestPointer.READ_HEAD_END)
         if (method == METHOD.POST) {
-            if (webConfig.tempFolder.isDirectory.not()) {
-                webConfig.tempFolder.mkdirs()
-            }
+           checkTempFolder()
             // 建立临时文件夹
             val outputStream = tempBlockCreateFunc("post")
             val bytes = ByteArray(WebServer.CACHE_SIZE)
@@ -107,14 +105,35 @@ class RequestReaderImpl(
                 }
             }
             // 將 POST 數據保存到數據塊下
-            var findKClass: KClass<out BaseRequestBodyLoader>? =
-                BaseRequestBodyLoader.searchRequestBodyLoader(headers,
+            val bodyLoaderImplClass: KClass<out BaseRequestBodyLoader>? =
+                BaseRequestBodyLoader.searchRequestBodyLoader(
+                    headers,
                     webConfig.requestBodyLoader,
-                    logger)
+                    logger
+                )
+            if (bodyLoaderImplClass != null) {
+                val requestBodyLoader = BaseRequestBodyLoader.createNewDataBodyLoader(bodyLoaderImplClass, logger)
+                requestBodyLoader.registerCloseable()
+                logger.debug("表单解析将由 ${requestBodyLoader::class.java.simpleName} 完成.")
+
+                if (requestBodyLoader.load(location, headers, rawFormData, forms, tempBlockCreateFunc)) {
+                    logger.debug("表单处理完成.")
+                } else {
+                    throw BadRequestException("表单解析出现问题.")
+                }
+            } else {
+                logger.debug("未找到适合[${headers["Content-Type"]}]的解析方案.")
+            }
         } else {
             logger.warn("此会话并非 POST 请求，此方法不应该被调用.")
         }
         pointer = RequestPointer.END
+    }
+
+    private fun checkTempFolder() {
+        if (webConfig.tempFolder.isDirectory.not()) {
+            webConfig.tempFolder.mkdirs()
+        }
     }
 
     private fun choosePointer(status: RequestPointer) {
@@ -122,7 +141,6 @@ class RequestReaderImpl(
             throw WebServerInternalException("函數執行步驟出現錯誤.[${pointer.name}]")
         }
     }
-
     companion object {
         const val METHOD_SPIT_SIZE = 3
     }
