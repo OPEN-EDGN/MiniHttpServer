@@ -6,6 +6,9 @@ import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
+import java.lang.IndexOutOfBoundsException
+import java.util.*
+import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
 /**
@@ -24,11 +27,11 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
      * @return Boolean
      */
     abstract fun load(
-        location: String,
-        header: Map<String, String>,
-        dataBlock: IDataBlock,
-        block: HashMap<String, IDataBlock>,
-        tempFileCreateFun: (name: String) -> DataBlockOutputStream
+            location: String,
+            header: Map<String, String>,
+            dataBlock: IDataBlock,
+            block: HashMap<String, IDataBlock>,
+            tempFileCreateFun: (name: String) -> DataBlockOutputStream
     ): Boolean
 
     companion object {
@@ -37,8 +40,8 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
          */
         @Throws(WebServerInternalException::class)
         fun createNewDataBodyLoader(
-            clazz: KClass<out BaseRequestBodyLoader>,
-            logger: WebLogger
+                clazz: KClass<out BaseRequestBodyLoader>,
+                logger: WebLogger
         ): BaseRequestBodyLoader {
             try {
                 val webLogger = WebLogger(clazz.java)
@@ -55,9 +58,9 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
          *  判定解析方案
          */
         fun searchRequestBodyLoader(
-            headers: Map<String, String>,
-            loader: Map<String, KClass<out BaseRequestBodyLoader>>,
-            oldLogger: WebLogger
+                headers: Map<String, String>,
+                loader: Map<String, KClass<out BaseRequestBodyLoader>>,
+                oldLogger: WebLogger
         ): KClass<out BaseRequestBodyLoader>? {
             val logger = WebLogger(BaseRequestBodyLoader::class.java)
             logger.remoteAddress = oldLogger.remoteAddress
@@ -74,6 +77,54 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
                 }
             }
             return null
+        }
+
+        /**
+         * 在  IDataBlock 下搜索 data 字段首次出现的位置
+         *
+         * (搜索算法没有任何优化！)
+         *
+         * @param start Long 搜索开始的位置
+         * @return Long 第一次出现的位置，如果未发现则返回 -1
+         */
+        fun IDataBlock.searchIndex(data: ByteArray, start: Long = 0): Long {
+            if (start >= size) {
+                throw IndexOutOfBoundsException("start Index > size")
+            }
+            val dataSize = data.size
+            if (size < dataSize) {
+                return -1
+            }
+            val lastIndex = size - dataSize + 1 //如果到此处无法得到结果则返回 -1
+            var index: Long = start
+            var next = 0
+            var equalsTrue = false
+            while (true) {
+                if (index > lastIndex) {
+                    return -1
+                }
+                next = 0
+                equalsTrue = false
+                for ((ind, value) in (index until (index + dataSize)).withIndex()) {
+                    if (get(value) == data[ind]) {
+                        equalsTrue = true
+                    } else {
+                        equalsTrue = false
+                        break
+                    }
+                    if (get(value) == data[0] && next == 0) {
+                        next = ind
+                    }
+                }
+                if (equalsTrue) {
+                    return index
+                }
+                if (next != 0) {
+                    index += next
+                } else {
+                    index++
+                }
+            }
         }
     }
 }
@@ -102,16 +153,40 @@ abstract class BaseRequestBodyLoader(protected val logger: WebLogger) : Closeabl
 class FormDataBodyLoader(logger: WebLogger) : BaseRequestBodyLoader(logger) {
 
     override fun load(
-        location: String,
-        header: Map<String, String>,
-        dataBlock: IDataBlock,
-        block: HashMap<String, IDataBlock>,
-        tempFileCreateFun: (name: String) -> DataBlockOutputStream
+            location: String,
+            header: Map<String, String>,
+            dataBlock: IDataBlock,
+            block: HashMap<String, IDataBlock>,
+            tempFileCreateFun: (name: String) -> DataBlockOutputStream
     ): Boolean {
-        logger.info("OK")
+        val boundarySpit = (header["Content-Type"]
+                ?: throw BadRequestException("未发现Content-Type字段.")).split(Regex("boundary="), 2)
+        if (boundarySpit.size != 2) {
+            throw  BadRequestException("未发现Content-Type下boundary 字段 ( $boundarySpit ).")
+        }
+        val boundary = boundarySpit[1].trim()
+        val spitBoundary = "--$boundary\r\n".toByteArray(Charsets.ISO_8859_1)
+        val endBoundary = "\r\n--$boundary--".toByteArray(Charsets.ISO_8859_1)
+        val indexList = LinkedList<Pair<Long, Long>>()
+        var index = 0L
+        while (true) {
+            index = dataBlock.searchIndex(spitBoundary, index)
+            if (index == -1L) {
+                break
+            }
+            val second = index + spitBoundary.size
+            indexList.add(Pair(index, second -1 ))
+            index = second
+        }
+        indexList.add(Pair(dataBlock.searchIndex(endBoundary,indexList.last.second),dataBlock.size))
+
         return true
     }
 
     override fun close() {
+
     }
+
 }
+
+
