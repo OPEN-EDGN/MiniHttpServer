@@ -5,20 +5,18 @@ import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.config.WebConfig
 import tech.openedgn.net.server.web.data.METHOD
-import tech.openedgn.net.server.web.error.ClosedException
+import tech.openedgn.net.server.web.utils.AutoClosedManager
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.WebLogger
-import java.io.Closeable
 import java.io.File
-import java.util.LinkedList
-import java.util.UUID
+import java.util.*
 import kotlin.collections.HashMap
 
 abstract class BaseRequestReader(
     final override val remoteAddress: NetworkInfo,
     protected val webConfig: WebConfig
-) : IRequestReader {
+) : AutoClosedManager(remoteAddress.toString()) ,IRequestReader {
     override val sessionId: String = UUID.randomUUID().toString()
     override lateinit var method: METHOD
     override lateinit var location: String
@@ -26,25 +24,18 @@ abstract class BaseRequestReader(
     override val headers = HashMap<String, String>()
     override val forms = HashMap<String, IDataBlock>()
     override lateinit var rawFormData: IDataBlock
-    /**
-     * 自动销毁模块寄存
-     */
-    protected val closeList = LinkedList<Closeable>()
+
     /**
      * 临时數據塊存儲方案
      */
-    protected val tempBlockCreateFunc: (name: String) -> DataBlockOutputStream = {
+    protected val tempDataBlockConstructorFun: (name: String) -> DataBlockOutputStream = {
         val dataReaderOutputStream = DataBlockOutputStream(
-            File(webConfig.tempFolder, "temp-$sessionId-$it-${System.nanoTime()}.tmp"),
+            File(webConfig.tempFolder, "tmp-${remoteAddress.ip}-${remoteAddress.port}-$sessionId-$it-${System.nanoTime()}.tmp"),
             WebServer.MEMORY_CACHE_SIZE
         ) { d -> d.registerCloseable() }
         dataReaderOutputStream.registerCloseable()
     }
-    /**
-     * 此对象是否关闭
-     */
-    @Volatile
-    protected var closeable = false
+
     /**
      * 日志输出
      */
@@ -56,17 +47,10 @@ abstract class BaseRequestReader(
         // 日志分块
     }
 
-    protected fun <T : Closeable> T.registerCloseable(): T {
-        if (closeable) {
-            throw ClosedException("此对象生命周期已经结束！")
-        }
-        synchronized(closeList) {
-            closeList.addFirst(this)
-        }
-        return this
-    }
 
+    @Synchronized
     override fun close() {
+        super.close()
         headers.clear()
         // 注册清空 header的事件
         rawFormData.safeClose()
@@ -76,10 +60,6 @@ abstract class BaseRequestReader(
             // 清空 POST 表单
         }
         forms.clear()
-        closeable = true
-        closeList.forEach {
-            it.safeClose()
-        } // 销毁对象
-        closeList.clear()
     }
+
 }

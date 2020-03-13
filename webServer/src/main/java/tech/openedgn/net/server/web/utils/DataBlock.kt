@@ -1,5 +1,6 @@
 package tech.openedgn.net.server.web.utils
 
+import sun.security.util.Length
 import tech.openEdgn.tools4k.METHOD
 import tech.openEdgn.tools4k.calculatedHash
 import tech.openEdgn.tools4k.readText
@@ -59,7 +60,24 @@ interface IDataBlock : Closeable {
      */
     @Throws(IndexOutOfBoundsException::class)
     operator fun get(index: Long): Byte
+
+
+    /**
+     * 克隆新的数据块
+     *
+     * @param offset Long 数据块偏移
+     * @param length Long 新的长度
+     * @return IDataBlock 克隆的长度
+     */
+    fun copyInto(
+        offset: Long = 0,
+        length: Long = size,
+        func: (name: String) -> DataBlockOutputStream = {
+            DataBlockOutputStream()
+        }
+    ): IDataBlock
 }
+
 
 /**
  *
@@ -97,6 +115,18 @@ class ByteArrayDataBlock(
         data[index.toInt()]
     }
 
+    override fun copyInto(offset: Long, length: Long, func: (name: String) -> DataBlockOutputStream): IDataBlock {
+        if (closeable) {
+            throw ClosedException("此对象已经关闭！")
+        }
+        if ((offset + length) >= size) {
+            throw IndexOutOfBoundsException("(offset + length) >= size")
+        }
+        val result = ByteArray(length.toInt())
+        System.arraycopy(data, offset.toInt(), result, 0, length.toInt())
+        return ByteArrayDataBlock(result)
+    }
+
     override fun close() {
         closeable = true
     }
@@ -120,15 +150,14 @@ class ByteArrayDataBlock(
 class FileDataBlock(
     private val blockFile: File,
     private val deleteFile: Boolean = false
-) : IDataBlock {
+) : AutoClosedManager(), IDataBlock {
     private val randomAccessFile by lazy { RandomAccessFile(blockFile, "r") }
-    private val closedList = LinkedList<Closeable>()
 
     init {
         if (blockFile.isFile.not()) {
             throw FileNotFoundException(blockFile.absolutePath)
         }
-        closedList.addFirst(randomAccessFile)
+        randomAccessFile.registerCloseable()
     }
 
     override val size = blockFile.length()
@@ -140,18 +169,39 @@ class FileDataBlock(
         if (closed) {
             throw ClosedException("data closed.")
         }
-        val inputStream = blockFile.inputStream()
-        closedList.add(inputStream)
-        return inputStream
+        return blockFile.inputStream().registerCloseable()
+    }
+
+    override fun copyInto(offset: Long, length: Long, func: (name: String) -> DataBlockOutputStream): IDataBlock {
+        if (closed) {
+            throw ClosedException("data closed.")
+        }
+        if ((offset + length) >= size) {
+            throw IndexOutOfBoundsException("(offset + length) >= size")
+        }
+        val blockOutputStream =func("clone-$offset-$length")
+        val inputStream = openInputStream()
+        inputStream.skip(offset)
+        var copiedSize: Long = length
+        val bufferSize = 4096
+        val buffer = ByteArray(bufferSize)
+        while (true) {
+            if (copiedSize < bufferSize) {
+                inputStream.read(buffer, 0, copiedSize.toInt())
+                blockOutputStream.write(buffer, 0, copiedSize.toInt())
+                break
+            } else {
+                copiedSize -= inputStream.read(buffer, 0, bufferSize)
+                blockOutputStream.write(buffer, 0, bufferSize)
+            }
+        }
+        return blockOutputStream.openDataReader()
     }
 
     @Synchronized
     override fun close() {
         closed = true
-        closedList.forEach {
-            it.safeClose()
-        }
-        closedList.clear()
+        super.close()
         if (deleteFile && blockFile.delete().not()) {
             blockFile.deleteOnExit()
         }
@@ -187,7 +237,7 @@ fun String.createDataReader() =
  *
  */
 class DataBlockOutputStream(
-    private val tempFile: File,
+    private val tempFile: File = File.createTempFile("DataBlockOutputStream", System.nanoTime().toString()),
     private val maxMemorySize: Int = WebServer.CACHE_SIZE,
     private val openDataReaderHook: (IDataBlock) -> Unit = {}
 ) : OutputStream() {

@@ -5,9 +5,9 @@ import tech.openedgn.net.server.web.utils.ByteArrayDataBlock
 import tech.openedgn.net.server.web.utils.IDataBlock
 import java.io.Closeable
 
-class PostItem (val name:String,val data: IDataBlock):Closeable{
-    override fun close() {
+class FormItem (val name:String, val data: IDataBlock):Closeable{
 
+    override fun close() {
         data.safeClose()
     }
 

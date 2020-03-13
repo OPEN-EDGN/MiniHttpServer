@@ -93,7 +93,7 @@ class RequestReaderImpl(
         if (method == METHOD.POST) {
            checkTempFolder()
             // 建立临时文件夹
-            val outputStream = tempBlockCreateFunc("post")
+            val outputStream = tempDataBlockConstructorFun("post")
             val bytes = ByteArray(WebServer.CACHE_SIZE)
             while (requestReader.available() > 0) {
                 outputStream.write(bytes, 0, requestReader.read(bytes, 0, bytes.size))
@@ -117,7 +117,7 @@ class RequestReaderImpl(
                 requestBodyLoader.registerCloseable()
                 logger.debug("表单解析将由 ${requestBodyLoader::class.java.simpleName} 完成.")
 
-                if (requestBodyLoader.load(location, headers, rawFormData, forms, tempBlockCreateFunc)) {
+                if (requestBodyLoader.load(location, headers, rawFormData, forms, tempDataBlockConstructorFun)) {
                     logger.debug("表单处理完成.")
                 } else {
                     throw BadRequestException("表单解析出现问题.")
