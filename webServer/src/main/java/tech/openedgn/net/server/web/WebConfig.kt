@@ -1,7 +1,8 @@
-package tech.openedgn.net.server.web.config
+package tech.openedgn.net.server.web
 
 import tech.openedgn.net.server.web.request.bodyLoader.FormDataBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
+import tech.openedgn.net.server.web.request.bodyLoader.FormUrlencodedBodyLoader
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
@@ -52,7 +53,8 @@ class WebConfig(val serverPort: Int) : Closeable {
 
     val requestBodyLoader: ConcurrentHashMap<String, KClass<out BaseBodyLoader>> =
             ConcurrentHashMap(mapOf(
-                    Pair("multipart/form-data", FormDataBodyLoader::class)
+                    Pair("multipart/form-data", FormDataBodyLoader::class),
+                Pair("application/x-www-form-urlencoded", FormUrlencodedBodyLoader::class)
             ))
 
     inner class SafeMode {

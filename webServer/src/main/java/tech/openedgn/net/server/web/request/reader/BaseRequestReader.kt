@@ -3,7 +3,7 @@ package tech.openedgn.net.server.web.request.reader
 import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
-import tech.openedgn.net.server.web.config.WebConfig
+import tech.openedgn.net.server.web.WebConfig
 import tech.openedgn.net.server.web.data.FormItem
 import tech.openedgn.net.server.web.data.METHOD
 import tech.openedgn.net.server.web.utils.ClosedManager

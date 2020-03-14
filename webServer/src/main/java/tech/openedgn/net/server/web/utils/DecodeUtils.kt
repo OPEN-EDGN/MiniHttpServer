@@ -17,6 +17,5 @@ object DecodeUtils {
             }
         }
     }
-
     fun urlDecode(data: String): String = URLDecoder.decode(data, "utf-8")
 }

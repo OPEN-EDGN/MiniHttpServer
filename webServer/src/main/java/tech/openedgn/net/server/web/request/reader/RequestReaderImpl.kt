@@ -2,7 +2,7 @@ package tech.openedgn.net.server.web.request.reader
 
 import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
-import tech.openedgn.net.server.web.config.WebConfig
+import tech.openedgn.net.server.web.WebConfig
 import tech.openedgn.net.server.web.data.METHOD
 import tech.openedgn.net.server.web.error.BadRequestException
 import tech.openedgn.net.server.web.error.HeaderFormatException
@@ -85,7 +85,7 @@ class RequestReaderImpl(
             if (headerSpit.size != 2) {
                 throw HeaderFormatException(line)
             }
-            headers[headerSpit[0]] = DecodeUtils.urlDecode(headerSpit[1])
+            headers[headerSpit[0].trim()] = DecodeUtils.urlDecode(headerSpit[1]).trim()
         }
         pointer =
             RequestPointer.READ_HEAD_END

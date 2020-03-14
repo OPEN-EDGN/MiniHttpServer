@@ -1,6 +1,5 @@
 package tech.openedgn.net.server.web
 
-import tech.openedgn.net.server.web.config.WebConfig
 import tech.openedgn.net.server.web.thread.ServerSocketRunnable
 import tech.openedgn.net.server.web.utils.WebLoggerConfig
 import tech.openedgn.net.server.web.utils.getWebLogger

@@ -1,7 +1,7 @@
 package tech.openedgn.net.server.web.thread
 
 import tech.openedgn.net.server.web.bean.NetworkInfo
-import tech.openedgn.net.server.web.config.WebConfig
+import tech.openedgn.net.server.web.WebConfig
 import tech.openedgn.net.server.web.data.METHOD
 import tech.openedgn.net.server.web.request.reader.IRequestReader
 import tech.openedgn.net.server.web.request.reader.RequestReaderImpl
