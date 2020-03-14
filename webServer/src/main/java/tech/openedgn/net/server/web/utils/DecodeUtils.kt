@@ -10,7 +10,7 @@ object DecodeUtils {
             dataItem.split("=").let {
                 if (it.size == 2) {
                     val name = urlDecode(it[0])
-                    forms[name] =  FormItem(name,urlDecode(it[1] ).createDataReader())
+                    forms[name] =  FormItem(urlDecode(it[1] ).createDataReader())
                 } else {
                     logger.warn("表单键值对下有一对数据无法解析:[$dataItem]")
                 }
@@ -18,5 +18,5 @@ object DecodeUtils {
         }
     }
 
-    fun urlDecode(data: String) = URLDecoder.decode(data, "utf-8")
+    fun urlDecode(data: String): String = URLDecoder.decode(data, "utf-8")
 }

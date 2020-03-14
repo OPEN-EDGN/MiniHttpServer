@@ -5,9 +5,10 @@ import tech.openedgn.net.server.web.utils.ByteArrayDataBlock
 import tech.openedgn.net.server.web.utils.IDataBlock
 import java.io.Closeable
 
-class FormItem (val name:String, val data: IDataBlock):Closeable{
-
+data class FormItem (val data: IDataBlock):Closeable{
+    val formItemHeaders = HashMap<String,String>()
     override fun close() {
+        formItemHeaders.clear()
         data.safeClose()
     }
 }

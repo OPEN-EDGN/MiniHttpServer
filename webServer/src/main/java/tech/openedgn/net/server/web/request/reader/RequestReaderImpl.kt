@@ -56,8 +56,8 @@ class RequestReaderImpl(
         val path = methodSplit[1].split(Regex("#"), 2)[0]
         // 此時的location 可能附帶了表單信息
         val pathSpit = path.split(Regex("\\?"), 2)
+        location = DecodeUtils.urlDecode(pathSpit[0])
         if (pathSpit.size == 1) {
-            location = pathSpit[0]
             if (method == METHOD.GET) {
                 rawFormData = ByteArrayDataBlock(ByteArray(0))
             }
@@ -68,7 +68,6 @@ class RequestReaderImpl(
             logger.debug("在[$method]下已自动排除url中的表单数据:[${pathSpit[1]}]")
         }
         // method 解析完畢
-        logger.info("收到${method}請求,請求路徑：$location")
         pointer =
             RequestPointer.READ_METHOD_END
     }
@@ -131,6 +130,7 @@ class RequestReaderImpl(
             }
         } else {
             logger.warn("此会话并非 POST 请求，此方法不应该被调用.")
+            throw WebServerInternalException("此会话并非 POST 请求，此方法不应该被调用.")
         }
         pointer = RequestPointer.END
     }
