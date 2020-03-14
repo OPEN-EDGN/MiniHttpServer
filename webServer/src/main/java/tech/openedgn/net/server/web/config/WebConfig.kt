@@ -1,7 +1,7 @@
 package tech.openedgn.net.server.web.config
 
-import tech.openedgn.net.server.web.io.FormDataBodyLoader
-import tech.openedgn.net.server.web.io.BaseRequestBodyLoader
+import tech.openedgn.net.server.web.request.bodyLoader.FormDataBodyLoader
+import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
@@ -50,7 +50,7 @@ class WebConfig(val serverPort: Int) : Closeable {
     @Volatile
     var charset: Charset = Charsets.UTF_8
 
-    val requestBodyLoader: ConcurrentHashMap<String, KClass<out BaseRequestBodyLoader>> =
+    val requestBodyLoader: ConcurrentHashMap<String, KClass<out BaseBodyLoader>> =
             ConcurrentHashMap(mapOf(
                     Pair("multipart/form-data", FormDataBodyLoader::class)
             ))

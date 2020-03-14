@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.io
+package tech.openedgn.net.server.web.request.reader
 
 import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
@@ -8,6 +8,7 @@ import tech.openedgn.net.server.web.error.BadRequestException
 import tech.openedgn.net.server.web.error.HeaderFormatException
 import tech.openedgn.net.server.web.error.MethodFormatException
 import tech.openedgn.net.server.web.error.WebServerInternalException
+import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.utils.BufferedInputStream
 import tech.openedgn.net.server.web.utils.ByteArrayDataBlock
 import tech.openedgn.net.server.web.utils.DecodeUtils
@@ -30,7 +31,8 @@ class RequestReaderImpl(
     }
 
     // 當前解析的進度
-    private var pointer = RequestPointer.BEGIN
+    private var pointer =
+        RequestPointer.BEGIN
 
     override fun loadMethod() {
         choosePointer(RequestPointer.BEGIN)
@@ -67,7 +69,8 @@ class RequestReaderImpl(
         }
         // method 解析完畢
         logger.info("收到${method}請求,請求路徑：$location")
-        pointer = RequestPointer.READ_METHOD_END
+        pointer =
+            RequestPointer.READ_METHOD_END
     }
 
     override fun loadHeader() {
@@ -85,7 +88,8 @@ class RequestReaderImpl(
             }
             headers[headerSpit[0]] = DecodeUtils.urlDecode(headerSpit[1])
         }
-        pointer = RequestPointer.READ_HEAD_END
+        pointer =
+            RequestPointer.READ_HEAD_END
     }
 
     override fun loadBody() {
@@ -106,14 +110,14 @@ class RequestReaderImpl(
                 }
             }
             // 將 POST 數據保存到數據塊下
-            val bodyLoaderImplClass: KClass<out BaseRequestBodyLoader>? =
-                BaseRequestBodyLoader.searchRequestBodyLoader(
+            val bodyLoaderImplClass: KClass<out BaseBodyLoader>? =
+                BaseBodyLoader.searchRequestBodyLoader(
                     headers,
                     webConfig.requestBodyLoader,
                     logger
                 )
             if (bodyLoaderImplClass != null) {
-                val requestBodyLoader = BaseRequestBodyLoader.createNewDataBodyLoader(bodyLoaderImplClass, logger)
+                val requestBodyLoader = BaseBodyLoader.createNewDataBodyLoader(bodyLoaderImplClass, logger)
                 requestBodyLoader.registerCloseable()
                 logger.debug("表单解析将由 ${requestBodyLoader::class.java.simpleName} 完成.")
 

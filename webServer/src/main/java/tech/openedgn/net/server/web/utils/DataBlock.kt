@@ -1,6 +1,5 @@
 package tech.openedgn.net.server.web.utils
 
-import sun.security.util.Length
 import tech.openEdgn.tools4k.METHOD
 import tech.openEdgn.tools4k.calculatedHash
 import tech.openEdgn.tools4k.readText
@@ -18,7 +17,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.io.RandomAccessFile
 import java.nio.charset.Charset
-import java.util.LinkedList
 
 /**
  * 数据块模型
@@ -76,6 +74,15 @@ interface IDataBlock : Closeable {
             DataBlockOutputStream()
         }
     ): IDataBlock
+
+    fun toString(start: Long, len: Int, charset: Charset): String{
+        val inputStream = openInputStream()
+        inputStream.skip(start)
+        val array = ByteArray(len)
+        val result = String(array, 0, inputStream.read(array), charset)
+        inputStream.close()
+        return result
+    }
 }
 
 
@@ -150,7 +157,7 @@ class ByteArrayDataBlock(
 class FileDataBlock(
     private val blockFile: File,
     private val deleteFile: Boolean = false
-) : AutoClosedManager(), IDataBlock {
+) : ClosedManager("",true), IDataBlock {
     private val randomAccessFile by lazy { RandomAccessFile(blockFile, "r") }
 
     init {
@@ -201,7 +208,7 @@ class FileDataBlock(
     @Synchronized
     override fun close() {
         closed = true
-        super.close()
+        super.closeAllRegisterCloseable()
         if (deleteFile && blockFile.delete().not()) {
             blockFile.deleteOnExit()
         }

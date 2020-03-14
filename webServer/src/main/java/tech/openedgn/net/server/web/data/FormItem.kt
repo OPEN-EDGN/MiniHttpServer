@@ -10,6 +10,4 @@ class FormItem (val name:String, val data: IDataBlock):Closeable{
     override fun close() {
         data.safeClose()
     }
-
-
 }

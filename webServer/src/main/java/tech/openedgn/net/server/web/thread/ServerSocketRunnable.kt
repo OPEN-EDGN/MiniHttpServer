@@ -15,13 +15,13 @@ import java.util.concurrent.TimeUnit
 class ServerSocketRunnable(
     private val serverSocket: ServerSocket,
     private val webConfig: WebConfig
-) : AutoCloseRunnable() {
+) : AutoCloseRunnable("HOST") {
     private val threadPool by lazy {
         val threadPoolExecutor = ThreadPoolExecutor(0, Integer.MAX_VALUE,
                 if (webConfig.timeout == 0) Long.MAX_VALUE else (4 * webConfig.timeout.toLong()),
                 TimeUnit.MILLISECONDS,
                 SynchronousQueue())
-        Closeable { threadPoolExecutor.shutdownNow() }.registerAutoClose() // 注册自动销毁事件
+        Closeable { threadPoolExecutor.shutdownNow() }.registerCloseable() // 注册自动销毁事件
         threadPoolExecutor
         // 客户端容纳的线程池
     }

@@ -1,14 +1,16 @@
-package tech.openedgn.net.server.web.io
+package tech.openedgn.net.server.web.request.reader
 
 import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.config.WebConfig
+import tech.openedgn.net.server.web.data.FormItem
 import tech.openedgn.net.server.web.data.METHOD
-import tech.openedgn.net.server.web.utils.AutoClosedManager
+import tech.openedgn.net.server.web.utils.ClosedManager
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.IDataBlock
 import tech.openedgn.net.server.web.utils.WebLogger
+import java.io.Closeable
 import java.io.File
 import java.util.*
 import kotlin.collections.HashMap
@@ -16,13 +18,14 @@ import kotlin.collections.HashMap
 abstract class BaseRequestReader(
     final override val remoteAddress: NetworkInfo,
     protected val webConfig: WebConfig
-) : AutoClosedManager(remoteAddress.toString()) ,IRequestReader {
+) : ClosedManager(remoteAddress.toString()) ,
+    IRequestReader,Closeable {
     override val sessionId: String = UUID.randomUUID().toString()
     override lateinit var method: METHOD
     override lateinit var location: String
     override lateinit var httpVersion: String
     override val headers = HashMap<String, String>()
-    override val forms = HashMap<String, IDataBlock>()
+    override val forms = HashMap<String, FormItem>()
     override lateinit var rawFormData: IDataBlock
 
     /**
@@ -50,7 +53,7 @@ abstract class BaseRequestReader(
 
     @Synchronized
     override fun close() {
-        super.close()
+        super.closeAllRegisterCloseable()
         headers.clear()
         // 注册清空 header的事件
         rawFormData.safeClose()

@@ -1,6 +1,7 @@
-package tech.openedgn.net.server.web.io
+package tech.openedgn.net.server.web.request.reader
 
 import tech.openedgn.net.server.web.bean.NetworkInfo
+import tech.openedgn.net.server.web.data.FormItem
 import tech.openedgn.net.server.web.data.METHOD
 import tech.openedgn.net.server.web.utils.IDataBlock
 import java.io.Closeable
@@ -36,7 +37,7 @@ interface IRequestReader : Closeable {
     /**
      * 所有的表单信息
      */
-    val forms: Map<String, IDataBlock>
+    val forms: HashMap<String, FormItem>
 
     /**
      * 原始表單數據

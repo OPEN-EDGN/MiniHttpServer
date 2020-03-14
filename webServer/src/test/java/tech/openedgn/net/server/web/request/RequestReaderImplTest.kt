@@ -1,6 +1,5 @@
-package tech.openedgn.net.server.web.io
+package tech.openedgn.net.server.web.request
 
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class RequestReaderImplTest{
