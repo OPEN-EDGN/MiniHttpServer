@@ -1,6 +1,6 @@
 package tech.openedgn.net.server.web.request.bodyLoader
 
-import tech.openedgn.net.server.web.data.FormItem
+import tech.openedgn.net.server.web.bean.FormItem
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.DecodeUtils
 import tech.openedgn.net.server.web.utils.IDataBlock

@@ -1,14 +1,12 @@
 package tech.openedgn.net.server.web.utils
 
-import tech.openedgn.net.server.web.error.HttpException
-import tech.openedgn.net.server.web.error.WebServerInternalException
-import java.io.Closeable
-import java.util.concurrent.ConcurrentLinkedDeque
+import tech.openedgn.net.server.web.HttpException
+import tech.openedgn.net.server.web.WebServerInternalException
 
 /**
  * 请不要多次使用同一runnable
  */
-abstract class AutoCloseRunnable(tag:String = "") :ClosedManager(tag), Runnable {
+abstract class AutoClosedRunnable(tag:String = "") :ClosedManager(tag), Runnable {
     protected val logger = WebLogger(javaClass)
 
 

@@ -2,17 +2,17 @@ package tech.openedgn.net.server.web.thread
 
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.WebConfig
-import tech.openedgn.net.server.web.data.METHOD
+import tech.openedgn.net.server.web.consts.METHOD
 import tech.openedgn.net.server.web.request.reader.IRequestReader
 import tech.openedgn.net.server.web.request.reader.RequestReaderImpl
-import tech.openedgn.net.server.web.utils.AutoCloseRunnable
+import tech.openedgn.net.server.web.utils.AutoClosedRunnable
 import java.net.Socket
 
 class ClientRunnable(
     private val client: Socket,
     private val networkInfo: NetworkInfo,
     private val webConfig: WebConfig
-) : AutoCloseRunnable(networkInfo.toString()) {
+) : AutoClosedRunnable(networkInfo.toString()) {
     private val httpReader: IRequestReader by lazy {
         RequestReaderImpl(
             client.getInputStream(),

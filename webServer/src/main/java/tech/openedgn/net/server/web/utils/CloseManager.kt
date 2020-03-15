@@ -1,6 +1,6 @@
 package tech.openedgn.net.server.web.utils
 
-import tech.openedgn.net.server.web.error.ClosedException
+import tech.openedgn.net.server.web.ClosedException
 import java.io.Closeable
 
 interface IClosedManager{

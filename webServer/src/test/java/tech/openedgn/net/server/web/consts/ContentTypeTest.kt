@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.data
+package tech.openedgn.net.server.web.consts
 
 import com.google.gson.Gson
 import org.junit.jupiter.api.Assertions.assertEquals

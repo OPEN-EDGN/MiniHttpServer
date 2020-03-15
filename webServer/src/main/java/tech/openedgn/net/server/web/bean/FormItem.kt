@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.data
+package tech.openedgn.net.server.web.bean
 
 import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.utils.ByteArrayDataBlock

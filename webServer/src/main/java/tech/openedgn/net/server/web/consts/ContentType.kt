@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.data
+package tech.openedgn.net.server.web.consts
 
 import java.io.File
 

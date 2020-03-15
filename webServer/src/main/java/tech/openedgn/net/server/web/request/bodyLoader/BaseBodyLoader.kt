@@ -1,8 +1,8 @@
 package tech.openedgn.net.server.web.request.bodyLoader
 
-import tech.openedgn.net.server.web.data.FormItem
-import tech.openedgn.net.server.web.error.BadRequestException
-import tech.openedgn.net.server.web.error.WebServerInternalException
+import tech.openedgn.net.server.web.bean.FormItem
+import tech.openedgn.net.server.web.BadRequestException
+import tech.openedgn.net.server.web.WebServerInternalException
 import tech.openedgn.net.server.web.utils.ClosedManager
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.IDataBlock
@@ -69,7 +69,9 @@ abstract class BaseBodyLoader(protected val logger: WebLogger) :
         ): KClass<out BaseBodyLoader>? {
             val logger = WebLogger(BaseBodyLoader::class.java)
             logger.remoteAddress = oldLogger.remoteAddress
-            val contentType = headers["Content-Type"] ?: throw BadRequestException("请求为POST但未知请求类型（未发现Content-Type字段）.")
+            val contentType = headers["Content-Type"] ?: throw BadRequestException(
+                "请求为POST但未知请求类型（未发现Content-Type字段）."
+            )
             logger.debug("Content-Type:$contentType")
             val keys = loader.keys
             // 解析POST 请求的表单

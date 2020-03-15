@@ -5,7 +5,7 @@ import tech.openEdgn.tools4k.calculatedHash
 import tech.openEdgn.tools4k.readText
 import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.WebServer
-import tech.openedgn.net.server.web.error.ClosedException
+import tech.openedgn.net.server.web.ClosedException
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.Closeable

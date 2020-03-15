@@ -1,7 +1,7 @@
 package tech.openedgn.net.server.web.request.bodyLoader
 
-import tech.openedgn.net.server.web.data.FormItem
-import tech.openedgn.net.server.web.error.BadRequestException
+import tech.openedgn.net.server.web.bean.FormItem
+import tech.openedgn.net.server.web.BadRequestException
 import tech.openedgn.net.server.web.utils.*
 import java.util.*
 import kotlin.collections.HashMap

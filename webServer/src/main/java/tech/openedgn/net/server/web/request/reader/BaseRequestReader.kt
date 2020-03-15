@@ -4,8 +4,8 @@ import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.WebConfig
-import tech.openedgn.net.server.web.data.FormItem
-import tech.openedgn.net.server.web.data.METHOD
+import tech.openedgn.net.server.web.bean.FormItem
+import tech.openedgn.net.server.web.consts.METHOD
 import tech.openedgn.net.server.web.utils.ClosedManager
 import tech.openedgn.net.server.web.utils.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.IDataBlock

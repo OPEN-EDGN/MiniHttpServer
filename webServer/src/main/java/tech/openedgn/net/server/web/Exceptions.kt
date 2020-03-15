@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.error
+package tech.openedgn.net.server.web
 
 import java.io.IOException
 

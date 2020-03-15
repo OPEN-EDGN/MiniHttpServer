@@ -3,11 +3,11 @@ package tech.openedgn.net.server.web.request.reader
 import tech.openedgn.net.server.web.WebServer
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.WebConfig
-import tech.openedgn.net.server.web.data.METHOD
-import tech.openedgn.net.server.web.error.BadRequestException
-import tech.openedgn.net.server.web.error.HeaderFormatException
-import tech.openedgn.net.server.web.error.MethodFormatException
-import tech.openedgn.net.server.web.error.WebServerInternalException
+import tech.openedgn.net.server.web.consts.METHOD
+import tech.openedgn.net.server.web.BadRequestException
+import tech.openedgn.net.server.web.HeaderFormatException
+import tech.openedgn.net.server.web.MethodFormatException
+import tech.openedgn.net.server.web.WebServerInternalException
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.utils.BufferedInputStream
 import tech.openedgn.net.server.web.utils.ByteArrayDataBlock

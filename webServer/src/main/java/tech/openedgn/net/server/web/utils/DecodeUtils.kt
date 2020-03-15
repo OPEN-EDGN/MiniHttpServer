@@ -1,6 +1,6 @@
 package tech.openedgn.net.server.web.utils
 
-import tech.openedgn.net.server.web.data.FormItem
+import tech.openedgn.net.server.web.bean.FormItem
 import java.net.URLDecoder
 
 object DecodeUtils {
@@ -10,7 +10,8 @@ object DecodeUtils {
             dataItem.split("=").let {
                 if (it.size == 2) {
                     val name = urlDecode(it[0])
-                    forms[name] =  FormItem(urlDecode(it[1] ).createDataReader())
+                    forms[name] =
+                        FormItem(urlDecode(it[1]).createDataReader())
                 } else {
                     logger.warn("表单键值对下有一对数据无法解析:[$dataItem]")
                 }

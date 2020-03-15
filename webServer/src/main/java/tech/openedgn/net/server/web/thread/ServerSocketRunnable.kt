@@ -2,7 +2,7 @@ package tech.openedgn.net.server.web.thread
 
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.WebConfig
-import tech.openedgn.net.server.web.utils.AutoCloseRunnable
+import tech.openedgn.net.server.web.utils.AutoClosedRunnable
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 class ServerSocketRunnable(
     private val serverSocket: ServerSocket,
     private val webConfig: WebConfig
-) : AutoCloseRunnable("HOST") {
+) : AutoClosedRunnable("HOST") {
     private val threadPool by lazy {
         val threadPoolExecutor = ThreadPoolExecutor(0, Integer.MAX_VALUE,
                 if (webConfig.timeout == 0) Long.MAX_VALUE else (4 * webConfig.timeout.toLong()),
