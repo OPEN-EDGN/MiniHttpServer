@@ -9,7 +9,7 @@ import java.nio.charset.Charset
  * 数据块模型
  *
  * 通过此数据块创建的流将受到其管理，
- * 可以将其看作等长 ByteArray
+ * 可以将其看作 ByteArray
  *
  * @property size Long 数据块长度
  * @property text String  全部内容转换成
@@ -56,10 +56,7 @@ interface IDataBlock : Closeable {
      */
     fun copyInto(
         offset: Long = 0,
-        length: Long = size,
-        func: (name: String) -> DataBlockOutputStream = {
-            DataBlockOutputStream()
-        }
+        length: Long = size
     ): IDataBlock
 
     fun toString(start: Long, len: Int, charset: Charset): String{

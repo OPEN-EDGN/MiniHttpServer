@@ -3,6 +3,13 @@ package tech.openedgn.net.server.web.utils
 import tech.openedgn.net.server.web.ClosedException
 import java.io.Closeable
 
+/**
+ * 为对象提供一种自动执行 #Close方法的方案
+ *
+ * （ 极易造成内存泄漏！！！ 非必要场景请勿使用！！！）
+ *
+ * @property closeable Boolean
+ */
 interface IClosedManager{
     /**
      * 此对象是否关闭
@@ -69,6 +76,16 @@ abstract class ClosedManager(tag:String = "",private val disableLogger:Boolean =
         return this
     }
 
+    /**
+     * 此方法最后被调用
+     */
+    open fun closeIt() {
+
+    }
+
+    /**
+     * 执行此方法来关闭所有
+     */
     @Synchronized
     override fun closeAllRegisterCloseable() {
         closeable = true
@@ -78,6 +95,7 @@ abstract class ClosedManager(tag:String = "",private val disableLogger:Boolean =
                 if (!disableLogger){
                     privateLogger.debug("执行[${it.javaClass.simpleName}]下Close()方法完成.")
                 }
+                closeIt()
             } catch (e: Exception) {
                 if (!disableLogger) {
                     privateLogger.error("执行[${it.javaClass.simpleName}]下Close()方法出现错误.", e)

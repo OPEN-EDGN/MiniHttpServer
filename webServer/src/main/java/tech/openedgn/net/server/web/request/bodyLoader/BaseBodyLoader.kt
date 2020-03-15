@@ -3,7 +3,6 @@ package tech.openedgn.net.server.web.request.bodyLoader
 import tech.openedgn.net.server.web.bean.FormItem
 import tech.openedgn.net.server.web.BadRequestException
 import tech.openedgn.net.server.web.WebServerInternalException
-import tech.openedgn.net.server.web.utils.ClosedManager
 import tech.openedgn.net.server.web.utils.dataBlock.DataBlockOutputStream
 import tech.openedgn.net.server.web.utils.dataBlock.IDataBlock
 import tech.openedgn.net.server.web.utils.WebLogger
@@ -13,9 +12,7 @@ import kotlin.reflect.KClass
 /**
  *  此方法用于读取POST表单,每次会自动创建新的实例
  */
-abstract class BaseBodyLoader(protected val logger: WebLogger) :
-    ClosedManager(logger.remoteAddress),
-    Closeable {
+abstract class BaseBodyLoader(protected val logger: WebLogger) :Closeable {
     /**
      * 读取表单的数据方法
      *
@@ -24,19 +21,17 @@ abstract class BaseBodyLoader(protected val logger: WebLogger) :
      * @param header Map<String, String> 头部信息
      * @param dataBlock BaseDataReader 原始POST 数据
      * @param forms HashMap<String, BaseDataReader> 存入的POST 表单位置
-     * @param tempDataBlockConstructorFun Function1<[@kotlin.ParameterName] String, DataReaderOutputStream> 临时数据存储创建函数
      * @return Boolean
      */
     abstract fun load(
         location: String,
         header: Map<String, String>,
         dataBlock: IDataBlock,
-        forms: HashMap<String, FormItem>,
-        tempDataBlockConstructorFun: (name: String) -> DataBlockOutputStream
+        forms: HashMap<String, FormItem>
     ): Boolean
 
     override fun close() {
-        super.closeAllRegisterCloseable()
+
     }
 
     companion object{
@@ -58,6 +53,7 @@ abstract class BaseBodyLoader(protected val logger: WebLogger) :
                 throw WebServerInternalException("在创建對象時出现错误！", e)
             }
         }
+
 
         /**
          *  判定解析方案

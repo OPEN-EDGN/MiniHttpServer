@@ -22,7 +22,7 @@ abstract class BaseHttpRequest(protected val request: IRequest) : IRequest {
         get() = request.httpVersion
     override val headers: Map<String, String>
         get() = request.headers
-    override val forms: HashMap<String, FormItem>
+    override val forms: Map<String, FormItem>
         get() = request.forms
     override val rawFormData: IDataBlock
         get() = request.rawFormData

@@ -54,7 +54,7 @@ class BufferedInputStream(private val input: InputStream) : InputStream() {
             } else {
                 outputStream.toString(charset)
             }
-            outputStream.safeClose()
+            outputStream.safeCloseIt()
             return result
         }
     }
@@ -88,7 +88,7 @@ class BufferedInputStream(private val input: InputStream) : InputStream() {
             } else {
                 outputStream.toString(charset)
             }
-            outputStream.safeClose()
+            outputStream.safeCloseIt()
             return result
         }
     }

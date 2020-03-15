@@ -36,7 +36,7 @@ interface IRequest {
     /**
      * 所有的表单信息
      */
-    val forms: HashMap<String, FormItem>
+    val forms: Map<String, FormItem>
 
     /**
      * 原始表單數據

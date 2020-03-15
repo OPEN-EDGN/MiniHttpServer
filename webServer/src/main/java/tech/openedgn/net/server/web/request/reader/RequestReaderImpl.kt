@@ -12,6 +12,7 @@ import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.utils.BufferedInputStream
 import tech.openedgn.net.server.web.utils.dataBlock.ByteArrayDataBlock
 import tech.openedgn.net.server.web.utils.DecodeUtils
+import tech.openedgn.net.server.web.utils.safeCloseIt
 import java.io.IOException
 import java.io.InputStream
 import kotlin.reflect.KClass
@@ -85,7 +86,7 @@ class RequestReaderImpl(
             if (headerSpit.size != 2) {
                 throw HeaderFormatException(line)
             }
-            headers[headerSpit[0].trim()] = DecodeUtils.urlDecode(headerSpit[1]).trim()
+            headers[headerSpit[0].trim()] = DecodeUtils.urlDecode(headerSpit[1].trim())
         }
         pointer =
             RequestPointer.READ_HEAD_END
@@ -117,12 +118,12 @@ class RequestReaderImpl(
                 )
             if (bodyLoaderImplClass != null) {
                 val requestBodyLoader = BaseBodyLoader.createNewDataBodyLoader(bodyLoaderImplClass, logger)
-                requestBodyLoader.registerCloseable()
                 logger.debug("表单解析将由 ${requestBodyLoader::class.java.simpleName} 完成.")
-
-                if (requestBodyLoader.load(location, headers, rawFormData, forms, tempDataBlockConstructorFun)) {
+                if (requestBodyLoader.load(location, headers, rawFormData, forms)) {
+                    requestBodyLoader.safeCloseIt(logger)
                     logger.debug("表单处理完成.")
                 } else {
+                    requestBodyLoader.safeCloseIt(logger)
                     throw BadRequestException("表单解析出现问题.")
                 }
             } else {
@@ -135,6 +136,9 @@ class RequestReaderImpl(
         pointer = RequestPointer.END
     }
 
+    /**
+     * 检查临时文件夹是否存在
+     */
     private fun checkTempFolder() {
         if (webConfig.tempFolder.isDirectory.not()) {
             webConfig.tempFolder.mkdirs()

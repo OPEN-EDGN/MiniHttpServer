@@ -3,7 +3,8 @@ package tech.openedgn.net.server.web.consts
 /**
  * The response codes for HTTP, as of version 1.1.
  */
-enum class ResponseCode(val codeIde: Int, codeMessage: String) {
+enum class ResponseCode(val codeId: Int,val codeMessage: String) {
+
     /* 2XX: generally "OK" */
     /**
      * HTTP Status-Code 200: OK.
@@ -175,6 +176,9 @@ enum class ResponseCode(val codeIde: Int, codeMessage: String) {
     /**
      * HTTP Status-Code 505: HTTP Version Not Supported.
      */
-    HTTP_VERSION(505, "VERSION")
+    HTTP_VERSION(505, "VERSION");
 
+    fun toPrintLine(): String {
+        return "$codeId $codeMessage"
+    }
 }

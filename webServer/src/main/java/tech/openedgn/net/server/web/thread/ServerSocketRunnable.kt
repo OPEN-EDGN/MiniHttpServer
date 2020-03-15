@@ -3,6 +3,7 @@ package tech.openedgn.net.server.web.thread
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.WebConfig
 import tech.openedgn.net.server.web.utils.AutoClosedRunnable
+import tech.openedgn.net.server.web.utils.safeCloseIt
 import java.io.Closeable
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -16,15 +17,14 @@ class ServerSocketRunnable(
     private val serverSocket: ServerSocket,
     private val webConfig: WebConfig
 ) : AutoClosedRunnable("HOST") {
-    private val threadPool by lazy {
-        val threadPoolExecutor = ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                if (webConfig.timeout == 0) Long.MAX_VALUE else (4 * webConfig.timeout.toLong()),
-                TimeUnit.MILLISECONDS,
-                SynchronousQueue())
-        Closeable { threadPoolExecutor.shutdownNow() }.registerCloseable() // 注册自动销毁事件
-        threadPoolExecutor
-        // 客户端容纳的线程池
-    }
+    private val threadPool = ThreadPoolExecutor(
+        0, Integer.MAX_VALUE,
+        if (webConfig.timeout == 0) Long.MAX_VALUE else (4 * webConfig.timeout.toLong()),
+        TimeUnit.MILLISECONDS,
+        SynchronousQueue()
+    )
+    // 客户端容纳的线程池
+
 
     override fun execute() {
         logger.info("Web服务器已经启动，端口为：${webConfig.serverPort}")
@@ -61,5 +61,10 @@ class ServerSocketRunnable(
                 // 如果是因为端口监听关闭而抛出异常，则不会抛出
             }
         }
+    }
+
+    override fun close() {
+        serverSocket.safeCloseIt(logger)
+        threadPool.shutdownNow()
     }
 }

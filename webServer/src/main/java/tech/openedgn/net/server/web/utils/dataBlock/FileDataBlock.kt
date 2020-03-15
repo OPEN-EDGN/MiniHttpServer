@@ -13,12 +13,10 @@ import java.io.RandomAccessFile
  * 文件类型的数据块
  *
  * @property blockFile File 数据块文件
- * @property deleteFile Boolean 是否自动删除
  */
 class FileDataBlock(
-    private val blockFile: File,
-    private val deleteFile: Boolean = false
-) : ClosedManager("",true), IDataBlock {
+    private val blockFile: File
+) : ClosedManager("", true), IDataBlock {
     private val randomAccessFile by lazy { RandomAccessFile(blockFile, "r") }
 
     init {
@@ -40,14 +38,14 @@ class FileDataBlock(
         return blockFile.inputStream().registerCloseable()
     }
 
-    override fun copyInto(offset: Long, length: Long, func: (name: String) -> DataBlockOutputStream): IDataBlock {
+    override fun copyInto(offset: Long, length: Long): IDataBlock {
         if (closed) {
             throw ClosedException("data closed.")
         }
         if ((offset + length) >= size) {
             throw IndexOutOfBoundsException("(offset + length) >= size")
         }
-        val blockOutputStream =func("clone-$offset-$length")
+        val blockOutputStream = DataBlockOutputStream(File("${blockFile.absolutePath}-clone-$offset-$length"))
         val inputStream = openInputStream()
         inputStream.skip(offset)
         var copiedSize: Long = length
@@ -70,7 +68,7 @@ class FileDataBlock(
     override fun close() {
         closed = true
         super.closeAllRegisterCloseable()
-        if (deleteFile && blockFile.delete().not()) {
+        if (blockFile.delete().not()) {
             blockFile.deleteOnExit()
         }
     }

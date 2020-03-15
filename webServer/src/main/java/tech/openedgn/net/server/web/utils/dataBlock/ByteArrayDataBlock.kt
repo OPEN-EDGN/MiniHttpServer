@@ -42,7 +42,7 @@ class ByteArrayDataBlock(
         data[index.toInt()]
     }
 
-    override fun copyInto(offset: Long, length: Long, func: (name: String) -> DataBlockOutputStream): IDataBlock {
+    override fun copyInto(offset: Long, length: Long): IDataBlock {
         if (closeable) {
             throw ClosedException("此对象已经关闭！")
         }

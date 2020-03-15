@@ -11,8 +11,7 @@ class FormUrlencodedBodyLoader (logger: WebLogger) : BaseBodyLoader(logger) {
         location: String,
         header: Map<String, String>,
         dataBlock: IDataBlock,
-        forms: HashMap<String, FormItem>,
-        tempDataBlockConstructorFun: (name: String) -> DataBlockOutputStream
+        forms: HashMap<String, FormItem>
     ): Boolean {
         DecodeUtils.decodeFormData(dataBlock.toString(Charsets.ISO_8859_1),forms,logger)
         return true

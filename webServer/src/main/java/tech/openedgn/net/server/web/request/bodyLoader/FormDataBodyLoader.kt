@@ -35,8 +35,7 @@ class FormDataBodyLoader(logger: WebLogger) : BaseBodyLoader(logger) {
         location: String,
         header: Map<String, String>,
         dataBlock: IDataBlock,
-        forms: HashMap<String, FormItem>,
-        tempDataBlockConstructorFun: (name: String) -> DataBlockOutputStream
+        forms: HashMap<String, FormItem>
     ): Boolean {
         val contentType = header.getOrElse("Content-Type", {
             throw BadRequestException("未发现Content-Type字段.")
@@ -80,11 +79,10 @@ class FormDataBodyLoader(logger: WebLogger) : BaseBodyLoader(logger) {
                     )}]"
                 )
             }
-            val formBlock = dataBlock.copyInto(offset, indexList[i + 1] - offset, tempDataBlockConstructorFun)
+            val formBlock = dataBlock.copyInto(offset, indexList[i + 1] - offset)
             // 表单数据
             val formItemHeaderArrays =
-                dataBlock.copyInto(indexList[i], formInfoEnd - indexList[i], tempDataBlockConstructorFun)
-                    .toString(Charsets.ISO_8859_1)
+                dataBlock.toString(indexList[i], (formInfoEnd - indexList[i]).toInt(),Charsets.ISO_8859_1)
                     .split("\r\n")
             val stringBuilder = StringBuilder()
             formItemHeaderArrays.forEach {

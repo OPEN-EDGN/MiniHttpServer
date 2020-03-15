@@ -1,22 +1,23 @@
 package tech.openedgn.net.server.web.utils.dataBlock
 
-import tech.openEdgn.tools4k.safeClose
 import tech.openedgn.net.server.web.ClosedException
 import tech.openedgn.net.server.web.WebServer
+import tech.openedgn.net.server.web.utils.safeCloseIt
 import java.io.*
 
 /**
- * 自动化创建存储块
+ *  缓存型 OutputStream
+ *
+ *  为尽量减少读写磁盘，减少磁盘的吞吐量，使用此 OutputStream 可达到效果，
+ *  碎片数据保存在RAM ，而大文件则保存到临时目录，关于 `DataBlock` 的介绍请看 `IDataBlock`
  *
  * @property tempFile File 临时文件位置
- * @property maxMemorySize Int 超过此值就保存到文件中.
- * @property openDataReaderHook 内部触发器逻辑
+ * @property maxMemorySize Int 缓存大小，超过此值就保存到文件中防止内存超标.
  *
  */
 class DataBlockOutputStream(
     private val tempFile: File = File.createTempFile("DataBlockOutputStream", System.nanoTime().toString()),
-    private val maxMemorySize: Int = WebServer.CACHE_SIZE,
-    private val openDataReaderHook: (IDataBlock) -> Unit = {}
+    private val maxMemorySize: Int = WebServer.MEMORY_CACHE_SIZE
 ) : OutputStream() {
 
     init {
@@ -88,35 +89,40 @@ class DataBlockOutputStream(
     private val dataBlock: IDataBlock by lazy {
         synchronized(lock) {
             open = true
-            close()
+            closed = true
+            output.safeCloseIt()
             val baseDataReader = if (checkFile) {
-                FileDataBlock(tempFile, true)
+                FileDataBlock(tempFile)
             } else {
+                tempFile.delete()
                 ByteArrayDataBlock((output as ByteArrayOutputStream).toByteArray())
             }
-            openDataReaderHook(baseDataReader)
-            // 触发器HOOK
             baseDataReader
         }
     }
 
     /**
      * 当执行此方法时，将自动关闭此 `OutputStream `
-     * 多次执行共享同一实例
+     * 共享同一实例
      *
      * @return BaseDataReader
      */
     fun openDataReader() = dataBlock
 
+    /**
+     * 执行此方法会导致创建的`DataBlock` 销毁！
+     */
     override fun close() {
         synchronized(lock) {
             if (!closed) {
-                output.safeClose()
+                output.safeCloseIt()
                 closed = true
                 if (checkFile.not()) {
                     tempFile.delete()
                 }
-                if (open.not()) {
+                if (open) {
+                    dataBlock.safeCloseIt()
+                }else{
                     tempFile.delete()
                 }
             }

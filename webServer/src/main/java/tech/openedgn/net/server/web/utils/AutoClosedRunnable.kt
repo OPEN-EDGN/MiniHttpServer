@@ -2,13 +2,13 @@ package tech.openedgn.net.server.web.utils
 
 import tech.openedgn.net.server.web.HttpException
 import tech.openedgn.net.server.web.WebServerInternalException
+import java.io.Closeable
 
 /**
  * 请不要多次使用同一runnable
  */
-abstract class AutoClosedRunnable(tag:String = "") :ClosedManager(tag), Runnable {
-    protected val logger = WebLogger(javaClass)
-
+abstract class AutoClosedRunnable(tag:String = "") : Runnable,Closeable {
+    protected val logger = getWebLogger(javaClass,tag)
 
     @SuppressWarnings("TooGenericExceptionCaught")
     override fun run() {
@@ -23,7 +23,7 @@ abstract class AutoClosedRunnable(tag:String = "") :ClosedManager(tag), Runnable
         } catch (e: Exception) {
             logger.error("线程 [${Thread.currentThread().name}] 在执行过程中出现不可预测的异常.", e)
         } finally {
-            closeAllRegisterCloseable()
+            safeCloseIt(logger)
         }
         logger.debug("如无意外，线程实例 [${Thread.currentThread().name}] 已经结束.")
     }
