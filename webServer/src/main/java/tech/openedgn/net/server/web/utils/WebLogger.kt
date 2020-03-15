@@ -27,6 +27,8 @@ class WebLogger constructor(private val clazz: Class<out Any>) {
 
     var remoteAddress: String = "HOST"
 
+    /**
+     */
     fun debugOnly(t: (WebLogger) -> Unit): WebLogger {
         if (isDebug) {
             t(this)

@@ -1224,7 +1224,7 @@
     "application": "text/xml"
   },
   {
-    "fileType": ".torren",
+    "fileType": ".torrent",
     "application": "tapplication/x-bittorrent"
   },
   {

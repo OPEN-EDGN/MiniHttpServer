@@ -15,8 +15,8 @@ import javax.net.ServerSocketFactory
  *
  */
 class WebServer @JvmOverloads constructor(
-    private val serverPort: Int,
-    private val factory: ServerSocketFactory = ServerSocketFactory.getDefault()
+      serverPort: Int,
+     factory: ServerSocketFactory = ServerSocketFactory.getDefault()
 ) : Closeable {
 
     private val logger = getWebLogger()

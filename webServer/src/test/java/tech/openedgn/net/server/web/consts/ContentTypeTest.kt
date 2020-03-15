@@ -38,7 +38,7 @@ class ContentTypeTest {
 
         val fromJson =
                 Gson().fromJson(
-                        javaClass.getResource("/application.json").openStream().readText(),
+                        javaClass.getResource("/res/contentType.json").openStream().readText(),
                         Array<Content>::class.javaObjectType
                 )
         val printWriter = File(System.getProperty("user.home"), "/Desktop/a.txt").printWriter()
