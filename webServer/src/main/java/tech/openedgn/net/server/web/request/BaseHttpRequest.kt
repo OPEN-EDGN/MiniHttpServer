@@ -3,7 +3,7 @@ package tech.openedgn.net.server.web.request
 import tech.openedgn.net.server.web.bean.FormItem
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.consts.METHOD
-import tech.openedgn.net.server.web.utils.IDataBlock
+import tech.openedgn.net.server.web.utils.dataBlock.IDataBlock
 import java.nio.charset.Charset
 
 /**
@@ -36,4 +36,9 @@ abstract class BaseHttpRequest(protected val request: IRequest) : IRequest {
      * 请求的编码类型
      */
     abstract val charset:Charset
+
+    /**
+     * 打印请求数据
+     */
+    abstract fun printInfo()
 }

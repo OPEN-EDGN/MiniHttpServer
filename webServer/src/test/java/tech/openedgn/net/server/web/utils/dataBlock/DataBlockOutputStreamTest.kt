@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.utils
+package tech.openedgn.net.server.web.utils.dataBlock
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

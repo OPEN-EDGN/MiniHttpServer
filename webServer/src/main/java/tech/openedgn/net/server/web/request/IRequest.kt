@@ -3,7 +3,7 @@ package tech.openedgn.net.server.web.request
 import tech.openedgn.net.server.web.bean.FormItem
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.consts.METHOD
-import tech.openedgn.net.server.web.utils.IDataBlock
+import tech.openedgn.net.server.web.utils.dataBlock.IDataBlock
 
 /**
  *

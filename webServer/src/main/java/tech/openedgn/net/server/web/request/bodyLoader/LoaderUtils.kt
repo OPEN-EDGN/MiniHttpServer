@@ -1,6 +1,6 @@
 package tech.openedgn.net.server.web.request.bodyLoader
 
-import tech.openedgn.net.server.web.utils.IDataBlock
+import tech.openedgn.net.server.web.utils.dataBlock.IDataBlock
 import java.lang.IndexOutOfBoundsException
 
 

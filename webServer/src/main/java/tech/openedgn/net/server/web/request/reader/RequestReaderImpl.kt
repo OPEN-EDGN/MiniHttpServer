@@ -10,7 +10,7 @@ import tech.openedgn.net.server.web.MethodFormatException
 import tech.openedgn.net.server.web.WebServerInternalException
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.utils.BufferedInputStream
-import tech.openedgn.net.server.web.utils.ByteArrayDataBlock
+import tech.openedgn.net.server.web.utils.dataBlock.ByteArrayDataBlock
 import tech.openedgn.net.server.web.utils.DecodeUtils
 import java.io.IOException
 import java.io.InputStream

@@ -4,8 +4,8 @@ import tech.openedgn.net.server.web.bean.FormItem
 import tech.openedgn.net.server.web.BadRequestException
 import tech.openedgn.net.server.web.WebServerInternalException
 import tech.openedgn.net.server.web.utils.ClosedManager
-import tech.openedgn.net.server.web.utils.DataBlockOutputStream
-import tech.openedgn.net.server.web.utils.IDataBlock
+import tech.openedgn.net.server.web.utils.dataBlock.DataBlockOutputStream
+import tech.openedgn.net.server.web.utils.dataBlock.IDataBlock
 import tech.openedgn.net.server.web.utils.WebLogger
 import java.io.Closeable
 import kotlin.reflect.KClass
