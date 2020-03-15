@@ -3,6 +3,7 @@ package tech.openedgn.net.server.web.thread
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.WebConfig
 import tech.openedgn.net.server.web.consts.METHOD
+import tech.openedgn.net.server.web.consts.ResponseCode
 import tech.openedgn.net.server.web.request.BaseHttpRequest
 import tech.openedgn.net.server.web.request.HttpRequest
 import tech.openedgn.net.server.web.request.reader.IRequestReader
@@ -12,6 +13,7 @@ import tech.openedgn.net.server.web.response.IResponse
 import tech.openedgn.net.server.web.response.writer.BaseHttpWriter
 import tech.openedgn.net.server.web.response.writer.HttpWriter
 import tech.openedgn.net.server.web.utils.AutoClosedRunnable
+import tech.openedgn.net.server.web.utils.dataBlock.ByteArrayDataBlock
 import tech.openedgn.net.server.web.utils.safeCloseIt
 import java.net.Socket
 
@@ -42,9 +44,7 @@ class ClientRunnable(
     /**
      * 响应的储存位置
      */
-    private val httpResponse:IResponse by lazy {
-        HttpResponse(networkInfo)
-    }
+    private lateinit var httpResponse:IResponse
     /**
      * 响应回馈
      */
@@ -60,12 +60,18 @@ class ClientRunnable(
         if (httpReader.method == METHOD.POST) {
             httpReader.loadBody()
         }
+        val res = HttpResponse(networkInfo)
+        httpResponse = res
+        res.responseCode = ResponseCode.HTTP_OK
+        res.responseData = ByteArrayDataBlock(javaClass.getResourceAsStream("/res/html/HelloWorld.html").readBytes())
+        res.responseHeader["Content-Type"] = "text/html;charset=utf-8"
+        httpWriter.write(res)
         httpRequest.printInfo()
     }
 
     override fun close() {
         httpReader.safeCloseIt(logger)
-//        httpResponse.safeCloseIt(logger)
+        httpResponse.safeCloseIt(logger)
         httpWriter.safeCloseIt(logger)
         client.safeCloseIt()
         logger.debug("对象关闭完成.")
