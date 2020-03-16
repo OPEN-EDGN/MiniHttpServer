@@ -8,6 +8,7 @@ import tech.openedgn.net.server.web.request.BaseHttpRequest
 import tech.openedgn.net.server.web.request.HttpRequest
 import tech.openedgn.net.server.web.request.reader.IRequestReader
 import tech.openedgn.net.server.web.request.reader.RequestReaderImpl
+import tech.openedgn.net.server.web.response.BaseHttpResponse
 import tech.openedgn.net.server.web.response.HttpResponse
 import tech.openedgn.net.server.web.response.IResponse
 import tech.openedgn.net.server.web.response.writer.BaseHttpWriter
@@ -44,7 +45,9 @@ class ClientRunnable(
     /**
      * 响应的储存位置
      */
-    private lateinit var httpResponse:IResponse
+    private val httpResponse:BaseHttpResponse by lazy {
+        HttpResponse(networkInfo)
+    }
     /**
      * 响应回馈
      */
@@ -56,16 +59,16 @@ class ClientRunnable(
     override fun execute() {
         httpReader.loadMethod()
         logger.info("收到${httpReader.method}請求,請求路徑：[${httpReader.location}].")
+
         httpReader.loadHeader()
         if (httpReader.method == METHOD.POST) {
             httpReader.loadBody()
         }
-        val res = HttpResponse(networkInfo)
-        httpResponse = res
-        res.responseCode = ResponseCode.HTTP_OK
-        res.responseData = ByteArrayDataBlock(javaClass.getResourceAsStream("/res/html/HelloWorld.html").readBytes())
-        res.responseHeader["Content-Type"] = "text/html;charset=utf-8"
-        httpWriter.write(res)
+
+        httpResponse.responseCode = ResponseCode.HTTP_OK
+        httpResponse.responseData = ByteArrayDataBlock(javaClass.getResourceAsStream("/res/html/HelloWorld.html").readBytes())
+        httpResponse.responseHeader["Content-Type"] = "text/html;charset=utf-8"
+        httpWriter.write(httpResponse)
         httpRequest.printInfo()
     }
 
