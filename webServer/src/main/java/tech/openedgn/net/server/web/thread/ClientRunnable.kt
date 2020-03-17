@@ -65,10 +65,7 @@ class ClientRunnable(
             httpReader.loadBody()
         }
 
-        httpResponse.responseCode = ResponseCode.HTTP_OK
-        httpResponse.responseData = ByteArrayDataBlock(javaClass.getResourceAsStream("/res/html/HelloWorld.html").readBytes())
-        httpResponse.responseHeader["Content-Type"] = "text/html;charset=utf-8"
-        httpWriter.write(httpResponse)
+
         httpRequest.printInfo()
     }
 
