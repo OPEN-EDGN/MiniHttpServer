@@ -30,11 +30,6 @@ class WebConfig(val serverPort: Int) : Closeable {
     @Volatile
     var indexFolder: File = File(System.getProperty("java.io.tmpdir"), "WebServerWork")
     /**
-     *  默认遍历
-     */
-    val indexFileName = mutableListOf("index.html", "index.htm", "index", "welcome-webServer.html")
-
-    /**
      * 客户端连接最长阻塞时间
      */
     @Volatile
@@ -45,17 +40,21 @@ class WebConfig(val serverPort: Int) : Closeable {
      */
     var accept: Boolean = false
 
-    /**
-     *  Web 服务器编码类型
-     */
-    @Volatile
-    var charset: Charset = Charsets.UTF_8
 
     val requestBodyLoader: ConcurrentHashMap<String, KClass<out BaseBodyLoader>> =
-            ConcurrentHashMap(mapOf(
-                    Pair("multipart/form-data", FormDataBodyLoader::class),
+        ConcurrentHashMap(
+            mapOf(
+                Pair("multipart/form-data", FormDataBodyLoader::class),
                 Pair("application/x-www-form-urlencoded", FormUrlencodedBodyLoader::class)
-            ))
+            )
+        )
+
+    /**
+     * 服务器内部定义数值，请勿在未知其用途的情况下修改！
+     */
+    inner class InternalConfig {
+        
+    }
 
     inner class SafeMode {
 
