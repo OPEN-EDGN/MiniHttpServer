@@ -1,10 +1,6 @@
 package tech.openedgn.net.server.web.request.reader
 
-import tech.openedgn.net.server.web.bean.NetworkInfo
-import tech.openedgn.net.server.web.bean.FormItem
-import tech.openedgn.net.server.web.consts.METHOD
 import tech.openedgn.net.server.web.request.IRequest
-import tech.openedgn.net.server.web.utils.dataBlock.IDataBlock
 import java.io.Closeable
 
 /**
