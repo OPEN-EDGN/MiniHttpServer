@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.response.controller
+package tech.openedgn.net.server.web.utils
 
 class RegexMatcher(private val regex: Regex) : IMatcher {
     override fun matches(input: CharSequence): Boolean {
@@ -7,7 +7,7 @@ class RegexMatcher(private val regex: Regex) : IMatcher {
 
     override fun equals(other: Any?): Boolean {
         return if (other != null && other is RegexMatcher) {
-            return regex.pattern.equals(other.regex.pattern)
+            return regex.pattern == other.regex.pattern
         } else {
             false
         }

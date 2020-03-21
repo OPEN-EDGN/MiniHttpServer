@@ -3,6 +3,7 @@ package tech.openedgn.net.server.web
 import tech.openedgn.net.server.web.request.bodyLoader.FormDataBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.FormUrlencodedBodyLoader
+import tech.openedgn.net.server.web.response.controller.IControllerNode
 import tech.openedgn.net.server.web.response.controller.ILocationSplitRule
 import tech.openedgn.net.server.web.response.controller.RegexLocationSplitRule
 import tech.openedgn.net.server.web.utils.getWebLogger
@@ -60,6 +61,8 @@ class WebConfig(val serverPort: Int) : Closeable {
     inner class InternalConfig {
         @Volatile
         var locationRule : ILocationSplitRule =RegexLocationSplitRule()
+
+        val rootControllerNode:IControllerNode = TODO()
     }
 
     inner class SafeMode {

@@ -1,5 +1,7 @@
 package tech.openedgn.net.server.web.response.controller
 
+import tech.openedgn.net.server.web.utils.IMatcher
+
 
 interface ILocationSplitRule {
     /**
@@ -17,5 +19,5 @@ interface ILocationSplitRule {
 //     * @param bindLocationSplitItem String 此字段与 `#bindLocationSplit(String):Array<String>` 方法字段匹配
 //     * @return 能匹配的规则
 //     */
-//    fun splitDecode(bindLocationSplitItem: String): IMatcher
+    fun splitDecode(bindLocationSplitItem: String): IMatcher
 }
