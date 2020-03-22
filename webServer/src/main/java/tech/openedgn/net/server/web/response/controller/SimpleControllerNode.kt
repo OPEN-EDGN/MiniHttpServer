@@ -1,20 +1,16 @@
 package tech.openedgn.net.server.web.response.controller
 
 import tech.openedgn.net.server.web.WebConfig
-import tech.openedgn.net.server.web.request.HttpRequest
+import tech.openedgn.net.server.web.consts.METHOD
+import tech.openedgn.net.server.web.request.BaseHttpRequest
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class SimpleControllerNode(config: WebConfig.InternalConfig) : BaseControllerNode(config) {
     private val read2WriteLock = ReentrantReadWriteLock(true)
     private val readLock = read2WriteLock.readLock()
     private val writeLock = read2WriteLock.writeLock()
+    override fun find(request: BaseHttpRequest): IController? {
 
-    override fun find(
-        location: List<String>,
-        request: HttpRequest,
-        regexValues: MutableList<String>,
-        regexControllers: MutableList<Controller>
-    ) {
         readLock.lock()
         val rule = config.locationRule
         try {
@@ -24,9 +20,10 @@ class SimpleControllerNode(config: WebConfig.InternalConfig) : BaseControllerNod
         } finally {
             readLock.unlock()
         }
+        TODO("Not yet implemented")
     }
 
-    override fun add(location: List<String>, controllerBean: Controller): Boolean {
+    override fun add(method: METHOD, location: String, controllerBean: IController): Boolean {
         writeLock.lock()
         try {
 
@@ -34,7 +31,7 @@ class SimpleControllerNode(config: WebConfig.InternalConfig) : BaseControllerNod
         } finally {
             writeLock.unlock()
         }
-        return false
+        TODO("Not yet implemented")
     }
 
 

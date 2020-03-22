@@ -1,19 +1,18 @@
 package tech.openedgn.net.server.web
 
+import tech.openedgn.net.server.web.consts.ResponseCode
 import tech.openedgn.net.server.web.request.bodyLoader.FormDataBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.FormUrlencodedBodyLoader
+import tech.openedgn.net.server.web.response.ResponseErrorWriter
+import tech.openedgn.net.server.web.response.controller.IController
 import tech.openedgn.net.server.web.response.controller.IControllerNode
 import tech.openedgn.net.server.web.response.controller.ILocationSplitRule
 import tech.openedgn.net.server.web.response.controller.RegexLocationSplitRule
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
-import java.nio.charset.Charset
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.LockSupport
-import java.util.concurrent.locks.ReadWriteLock
 import kotlin.reflect.KClass
 
 class WebConfig(val serverPort: Int) : Closeable {
@@ -59,6 +58,9 @@ class WebConfig(val serverPort: Int) : Closeable {
      * 服务器内部定义数值，请勿在未知其用途的情况下修改！
      */
     inner class InternalConfig {
+        val errorResponse: Map<ResponseCode, IController> = TODO()
+        val responseErrorWriter: ResponseErrorWriter = ResponseErrorWriter(errorResponse)
+
         @Volatile
         var locationRule : ILocationSplitRule =RegexLocationSplitRule()
 

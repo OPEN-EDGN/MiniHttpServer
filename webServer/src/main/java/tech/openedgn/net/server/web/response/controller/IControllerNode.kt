@@ -1,5 +1,7 @@
 package tech.openedgn.net.server.web.response.controller
 
+import tech.openedgn.net.server.web.consts.METHOD
+import tech.openedgn.net.server.web.request.BaseHttpRequest
 import tech.openedgn.net.server.web.request.HttpRequest
 import tech.openedgn.net.server.web.utils.IMatcher
 import java.io.Closeable
@@ -11,10 +13,6 @@ import java.io.Closeable
  *
  */
 interface IControllerNode : Closeable {
-    /**
-     * 子节点索引表
-     */
-    val child: Map<IMatcher, IControllerNode>
 
     /**
      * 此树的深度
@@ -27,32 +25,24 @@ interface IControllerNode : Closeable {
     val isEmpty: Boolean
 
     /**
-     * 树查找
+     * 根据 METHOD + HEADER 来查找解析方案
      *
-     * 根据给定的请求的路径 （`location` ）遍历树，
-     *
-     * TIPS: 此处可利用树的深度值来计算
-     *
-     * @param location List<String> 请求的地址切割
-     * @param request HttpRequest 包含了 http 的头部信息
-     * @param regexValues MutableList<String> 正则匹配数据容器
-     * @param regexControllers MutableList<ControllerItem> 条件匹配容器
+     * @param request BaseHttpRequest HTTP请求信息，注意，此方法执行时还未解析POST表单信息
+     * @return
      */
     fun find(
-        location: List<String>,
-        request: HttpRequest,
-        regexValues: MutableList<String>,
-        regexControllers: MutableList<Controller>
-    )
+        request: BaseHttpRequest
+    ): IController?
 
     /**
-     *
      * 添加子树
      *
-     * @param location List<String>
-     * @param controllerBean Controller
+     * @param method METHOD 请求类型
+     * @param location String 绑定的地址
+     * @param controllerBean Controller 适配器
+     * @return Boolean 是否添加成功
      */
-    fun add(location: List<String>, controllerBean: Controller): Boolean
+    fun add(method: METHOD, location: String, controllerBean: IController): Boolean
 
 
 }
