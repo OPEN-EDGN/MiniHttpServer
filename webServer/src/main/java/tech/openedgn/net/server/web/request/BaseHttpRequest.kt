@@ -27,7 +27,7 @@ abstract class BaseHttpRequest(protected val request: IRequest) : IRequest {
         get() = request.rawFormData
 
     /**
-     * 得到请求的 Content-Type 对象
+     * 得到请求的 Content-Type 对象 (仅限POST)
      */
     abstract val contentType: String
 
@@ -35,6 +35,11 @@ abstract class BaseHttpRequest(protected val request: IRequest) : IRequest {
      * 请求的编码类型
      */
     abstract val charset:Charset
+
+    /**
+     * 表单数据 （仅限POST）
+     */
+    abstract val formText:String
 
     /**
      * 打印请求数据

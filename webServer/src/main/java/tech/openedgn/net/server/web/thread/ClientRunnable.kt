@@ -7,12 +7,11 @@ import tech.openedgn.net.server.web.consts.ResponseCode
 import tech.openedgn.net.server.web.request.BaseHttpRequest
 import tech.openedgn.net.server.web.request.HttpRequest
 import tech.openedgn.net.server.web.request.reader.IRequestReader
-import tech.openedgn.net.server.web.request.reader.RequestReaderImpl
+import tech.openedgn.net.server.web.request.reader.SimpleRequestReader
 import tech.openedgn.net.server.web.response.BaseHttpResponse
-import tech.openedgn.net.server.web.response.ErrorResponse
 import tech.openedgn.net.server.web.response.HttpResponse
-import tech.openedgn.net.server.web.response.responseLoader.BaseResponseControllerLoader
-import tech.openedgn.net.server.web.response.responseLoader.ResponseControllerLoader
+import tech.openedgn.net.server.web.response.controller.BaseControllerLoader
+import tech.openedgn.net.server.web.response.controller.SimpleControllerLoader
 import tech.openedgn.net.server.web.response.writer.BaseHttpWriter
 import tech.openedgn.net.server.web.response.writer.HttpWriter
 import tech.openedgn.net.server.web.utils.AutoClosedRunnable
@@ -33,7 +32,7 @@ class ClientRunnable(
     private val webConfig: WebConfig
 ) : AutoClosedRunnable(networkInfo.toString()) {
     private val httpReader: IRequestReader by lazy {
-        RequestReaderImpl(
+        SimpleRequestReader(
             client.getInputStream(),
             networkInfo, webConfig
         )
@@ -60,8 +59,11 @@ class ClientRunnable(
         HttpWriter(networkInfo.toString(), client.getOutputStream())
     }
 
-    private val responseControllerLoader: BaseResponseControllerLoader by lazy {
-        ResponseControllerLoader(networkInfo, webConfig)
+    private val controllerLoader: BaseControllerLoader by lazy {
+        SimpleControllerLoader(
+            networkInfo,
+            webConfig
+        )
     }
 
     override fun execute() {
@@ -70,25 +72,34 @@ class ClientRunnable(
         val internalConfig = webConfig.InternalConfig()
         httpReader.loadHeader()
         try {
-            if (responseControllerLoader.responseExists(httpRequest)) {
+            if (controllerLoader.responseExists(httpRequest)) {
                 if (httpReader.method == METHOD.POST) {
                     logger.debug("")
                     httpReader.loadBody()
                     //  对于 POST 请求，如果存在Controller则会继续读取POST 请求，否则进入响应阶段
                 }
-                responseControllerLoader.loadResponse(httpResponse)
-            }else{
-                internalConfig.responseErrorWriter.write(httpResponse,ResponseCode.HTTP_NOT_FOUND)
+                controllerLoader.loadResponse(httpResponse)
+            } else {
+                internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_NOT_FOUND)
+                // 未查询到解析方案，返回 404
             }
-        }catch (e:Exception){
-            logger.debug("在处理请求的过程中发生错误！",e)
-            internalConfig.responseErrorWriter.write(httpResponse,ResponseCode.HTTP_UNAVAILABLE)
-            //
+        } catch (e: Exception) {
+            logger.debug("在处理请求的过程中发生错误！", e)
+            internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_UNAVAILABLE)
+            // 内部错误  503
         }
         if (httpResponse.isEmpty) {
-            internalConfig.responseErrorWriter.write(httpResponse,ResponseCode.HTTP_BAD_GATEWAY)
+            internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
+            /**
+             * 未获取到信息 502
+             */
         }
+        internalConfig.responseWrapper.wrap(httpResponse,httpRequest)
+        // 填充扩展数据
+        httpWriter.write(httpResponse)
+        // 响应
         httpRequest.printInfo()
+
     }
 
     override fun close() {

@@ -5,9 +5,9 @@ import tech.openedgn.net.server.web.utils.dataBlock.IDataBlock
 import java.io.Closeable
 
 /**
- *
+ * 响应的抽象方法
  */
-interface IResponse : Closeable {
+interface IResponse {
     /**
      * 响应ID
      */

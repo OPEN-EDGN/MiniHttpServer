@@ -5,6 +5,7 @@ import tech.openedgn.net.server.web.request.bodyLoader.FormDataBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.FormUrlencodedBodyLoader
 import tech.openedgn.net.server.web.response.ResponseErrorWriter
+import tech.openedgn.net.server.web.response.ResponseWrapper
 import tech.openedgn.net.server.web.response.controller.IController
 import tech.openedgn.net.server.web.response.controller.IControllerNode
 import tech.openedgn.net.server.web.response.controller.ILocationSplitRule
@@ -58,8 +59,9 @@ class WebConfig(val serverPort: Int) : Closeable {
      * 服务器内部定义数值，请勿在未知其用途的情况下修改！
      */
     inner class InternalConfig {
+        val responseWrapper: ResponseWrapper = TODO()
         val errorResponse: Map<ResponseCode, IController> = TODO()
-        val responseErrorWriter: ResponseErrorWriter = ResponseErrorWriter(errorResponse)
+        val simpleResponseErrorWriter: ResponseErrorWriter = ResponseErrorWriter(errorResponse)
 
         @Volatile
         var locationRule : ILocationSplitRule =RegexLocationSplitRule()

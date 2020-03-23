@@ -1,5 +1,6 @@
 package tech.openedgn.net.server.web.request
 
+import tech.openedgn.net.server.web.consts.METHOD
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.nio.charset.Charset
 
@@ -10,6 +11,9 @@ import java.nio.charset.Charset
 class HttpRequest(request: IRequest) : BaseHttpRequest(request) {
     private val logger = getWebLogger()
     override val contentType by lazy {
+        if (method!=METHOD.POST){
+            return@lazy ""
+        }
         val rawContentType = request.headers.getOrDefault("Content-Type","")
         if (rawContentType.contains(Regex("(boundary=|;)"))){
             return@lazy rawContentType.split(Regex(";"),2)[0]
@@ -19,6 +23,17 @@ class HttpRequest(request: IRequest) : BaseHttpRequest(request) {
     }
     override val charset by lazy { Charsets.ISO_8859_1 }
 
+    override val formText: String by lazy {
+        if (method!=METHOD.POST){
+            return@lazy ""
+        }
+        val rawContentType = request.headers.getOrDefault("Content-Type","").toLowerCase()
+        if (rawContentType.contains("charset=")) {
+            return@lazy rawFormData.toString(Charset.forName(rawContentType.split(Regex(";"),2)[1]))
+        }else{
+            return@lazy rawFormData.text
+        }
+    }
 
     override fun printInfo() {
         logger.debugOnly {

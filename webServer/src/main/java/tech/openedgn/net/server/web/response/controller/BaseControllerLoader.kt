@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.response.responseLoader
+package tech.openedgn.net.server.web.response.controller
 
 import tech.openedgn.net.server.web.WebConfig
 import tech.openedgn.net.server.web.bean.NetworkInfo
@@ -6,7 +6,7 @@ import tech.openedgn.net.server.web.request.BaseHttpRequest
 import tech.openedgn.net.server.web.response.BaseHttpResponse
 import java.io.Closeable
 
-abstract class BaseResponseControllerLoader(
+abstract class BaseControllerLoader(
     protected val networkInfo: NetworkInfo,
     protected val webConfig: WebConfig
 ) : Closeable {

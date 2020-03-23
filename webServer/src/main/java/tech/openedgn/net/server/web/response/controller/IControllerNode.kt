@@ -1,9 +1,6 @@
 package tech.openedgn.net.server.web.response.controller
 
-import tech.openedgn.net.server.web.consts.METHOD
 import tech.openedgn.net.server.web.request.BaseHttpRequest
-import tech.openedgn.net.server.web.request.HttpRequest
-import tech.openedgn.net.server.web.utils.IMatcher
 import java.io.Closeable
 
 /**
@@ -30,19 +27,38 @@ interface IControllerNode : Closeable {
      * @param request BaseHttpRequest HTTP请求信息，注意，此方法执行时还未解析POST表单信息
      * @return
      */
-    fun find(
+    fun select(
         request: BaseHttpRequest
     ): IController?
 
     /**
      * 添加子树
      *
-     * @param method METHOD 请求类型
      * @param location String 绑定的地址
      * @param controllerBean Controller 适配器
      * @return Boolean 是否添加成功
      */
-    fun add(method: METHOD, location: String, controllerBean: IController): Boolean
+    fun insert( location: String, controllerBean: IController)
 
 
+    /**
+     * 删除此 Controller
+     * @param location String Controller 绑定的路径
+     * @param recursive Boolean 是否删除所有子项
+     * @return Boolean 是否删除成功
+     */
+    fun delete( location: String,recursive:Boolean):Boolean
+
+
+    /**
+     * 更新 Controller
+     *
+     * 如果不存在则创建
+     *
+     * @param location String 绑定的地址
+     * @param controllerBean Controller 适配器
+     * @return 是否更新成功
+     *
+     */
+    fun update( location: String, controllerBean: IController):Boolean
 }

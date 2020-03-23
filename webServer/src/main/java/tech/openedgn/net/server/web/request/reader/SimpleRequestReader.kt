@@ -17,7 +17,7 @@ import java.io.IOException
 import java.io.InputStream
 import kotlin.reflect.KClass
 
-class RequestReaderImpl(
+class SimpleRequestReader(
     inputStream: InputStream,
     remoteAddress: NetworkInfo,
     webConfig: WebConfig
