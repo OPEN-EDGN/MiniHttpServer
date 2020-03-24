@@ -4,12 +4,12 @@ import tech.openedgn.net.server.web.consts.ResponseCode
 import tech.openedgn.net.server.web.request.bodyLoader.FormDataBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.FormUrlencodedBodyLoader
+import tech.openedgn.net.server.web.response.IWrapper
 import tech.openedgn.net.server.web.response.ResponseErrorWriter
-import tech.openedgn.net.server.web.response.ResponseWrapper
-import tech.openedgn.net.server.web.response.controller.IController
+import tech.openedgn.net.server.web.response.controller.Controller
 import tech.openedgn.net.server.web.response.controller.IControllerNode
-import tech.openedgn.net.server.web.response.controller.ILocationSplitRule
-import tech.openedgn.net.server.web.response.controller.RegexLocationSplitRule
+import tech.openedgn.net.server.web.response.rules.ILocationSplitRule
+import tech.openedgn.net.server.web.response.rules.RegexLocationSplitRule
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
@@ -59,12 +59,13 @@ class WebConfig(val serverPort: Int) : Closeable {
      * 服务器内部定义数值，请勿在未知其用途的情况下修改！
      */
     inner class InternalConfig {
-        val responseWrapper: ResponseWrapper = TODO()
-        val errorResponse: Map<ResponseCode, IController> = TODO()
+        val responseWrapper: IWrapper = TODO()
+        val errorResponse: Map<ResponseCode, Controller> = TODO()
         val simpleResponseErrorWriter: ResponseErrorWriter = ResponseErrorWriter(errorResponse)
 
         @Volatile
-        var locationRule : ILocationSplitRule =RegexLocationSplitRule()
+        var locationRule : ILocationSplitRule =
+            RegexLocationSplitRule()
 
         val rootControllerNode:IControllerNode = TODO()
     }

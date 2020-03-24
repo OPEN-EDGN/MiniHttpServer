@@ -10,7 +10,7 @@ import tech.openedgn.net.server.web.request.reader.IRequestReader
 import tech.openedgn.net.server.web.request.reader.SimpleRequestReader
 import tech.openedgn.net.server.web.response.BaseHttpResponse
 import tech.openedgn.net.server.web.response.HttpResponse
-import tech.openedgn.net.server.web.response.controller.BaseControllerLoader
+import tech.openedgn.net.server.web.response.controller.IControllerLoader
 import tech.openedgn.net.server.web.response.controller.SimpleControllerLoader
 import tech.openedgn.net.server.web.response.writer.BaseHttpWriter
 import tech.openedgn.net.server.web.response.writer.HttpWriter
@@ -59,7 +59,10 @@ class ClientRunnable(
         HttpWriter(networkInfo.toString(), client.getOutputStream())
     }
 
-    private val controllerLoader: BaseControllerLoader by lazy {
+    /**
+     * controller 解析 & 执行类
+     */
+    private val controllerLoader: IControllerLoader by lazy {
         SimpleControllerLoader(
             networkInfo,
             webConfig
@@ -72,29 +75,32 @@ class ClientRunnable(
         val internalConfig = webConfig.InternalConfig()
         httpReader.loadHeader()
         try {
-            if (controllerLoader.responseExists(httpRequest)) {
+            if (controllerLoader.controllerExists(httpRequest)) {
+                logger.debug("会话存在可用解析方案!")
                 if (httpReader.method == METHOD.POST) {
-                    logger.debug("")
                     httpReader.loadBody()
                     //  对于 POST 请求，如果存在Controller则会继续读取POST 请求，否则进入响应阶段
                 }
-                controllerLoader.loadResponse(httpResponse)
+                controllerLoader.executeController(httpRequest, httpResponse)
             } else {
                 internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_NOT_FOUND)
+                logger.debug("未查询到解析方案![404]")
                 // 未查询到解析方案，返回 404
             }
         } catch (e: Exception) {
-            logger.debug("在处理请求的过程中发生错误！", e)
+            logger.debug("在处理请求的过程中发生错误！[503]", e)
             internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_UNAVAILABLE)
             // 内部错误  503
         }
         if (httpResponse.isEmpty) {
             internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
-            /**
-             * 未获取到信息 502
-             */
+            logger.debug("空数据块![502]")
+            //未获取到信息 502
         }
-        internalConfig.responseWrapper.wrap(httpResponse,httpRequest)
+        if (internalConfig.responseWrapper.wrap(httpResponse, httpRequest).not()) {
+            internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
+            logger.debug("填充时发生错误![502]")
+        }
         // 填充扩展数据
         httpWriter.write(httpResponse)
         // 响应

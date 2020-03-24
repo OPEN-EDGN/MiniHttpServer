@@ -1,13 +1,14 @@
 package tech.openedgn.net.server.web
 
 import org.junit.jupiter.api.Test
-import tech.openedgn.net.server.web.response.controller.RegexLocationSplitRule
+import tech.openedgn.net.server.web.response.rules.RegexLocationSplitRule
 
 class WebServerTest {
 
     @Test
     fun test() {
-        val regexLocationSplitRule = RegexLocationSplitRule()
+        val regexLocationSplitRule =
+            RegexLocationSplitRule()
         println(regexLocationSplitRule.acceptLocationSplit("/asas/asasa/").toList().toString())
     }
 }

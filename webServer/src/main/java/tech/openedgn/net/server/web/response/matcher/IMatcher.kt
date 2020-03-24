@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web.utils
+package tech.openedgn.net.server.web.response.matcher
 
 import java.io.Serializable
 

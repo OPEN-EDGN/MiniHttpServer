@@ -10,9 +10,9 @@ import java.lang.reflect.Field
  * @property field Field
  * @property clazz Class<out Any>
  */
-interface IController{
-    val replyMethod: METHOD
-    val replyHeader: Map<String, String>
-    val field: Field
+data class Controller(
+    val replyMethod: METHOD,
+    val replyHeader: Map<String, String>,
+    val field: Field,
     val clazz: Class<out Any>
-}
+)

@@ -4,16 +4,14 @@ import tech.openedgn.net.server.web.WebConfig
 import tech.openedgn.net.server.web.bean.NetworkInfo
 import tech.openedgn.net.server.web.request.BaseHttpRequest
 import tech.openedgn.net.server.web.response.BaseHttpResponse
-import tech.openedgn.net.server.web.response.controller.BaseControllerLoader
-import tech.openedgn.net.server.web.response.controller.IController
 
 class SimpleControllerLoader(
     networkInfo: NetworkInfo,
     webConfig: WebConfig
-) : BaseControllerLoader(networkInfo, webConfig) {
+) : IControllerLoader {
     private val internalConfig = webConfig.InternalConfig()
-    private lateinit var controller: IController
-    override fun responseExists(request: BaseHttpRequest): Boolean {
+    private lateinit var controller: Controller
+    override fun controllerExists(request: BaseHttpRequest): Boolean {
         val iController = internalConfig.rootControllerNode.select(request)
         return if (iController != null) {
             controller = iController
@@ -23,8 +21,8 @@ class SimpleControllerLoader(
         }
     }
 
-    override fun loadResponse(httpResponse: BaseHttpResponse) {
-        TODO("Not yet implemented")
+    override fun executeController(request: BaseHttpRequest, httpResponse: BaseHttpResponse) {
+        controller
     }
 
     override fun close() {

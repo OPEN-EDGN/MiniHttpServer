@@ -1,6 +1,6 @@
-package tech.openedgn.net.server.web.response.controller
+package tech.openedgn.net.server.web.response.rules
 
-import tech.openedgn.net.server.web.utils.IMatcher
+import tech.openedgn.net.server.web.response.matcher.IMatcher
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.util.*
 
@@ -18,12 +18,10 @@ class RegexLocationSplitRule : ILocationSplitRule {
     }
 
     override fun bindLocationSplit(location: String): Array<IMatcher> {
-        return arrayOf()
+        TODO()
     }
 
-    override fun splitDecode(bindLocationSplitItem: String): IMatcher {
-        TODO("Not yet implemented")
-    }
+
 
 
 }

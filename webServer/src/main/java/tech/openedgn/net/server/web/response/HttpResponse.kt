@@ -15,7 +15,7 @@ class HttpResponse(remoteInfo: NetworkInfo) : BaseHttpResponse(remoteInfo) {
         }
 
     override val isEmpty: Boolean
-        get() = pIDataBlock == null
+        get() = pIDataBlock == null && responseHeader.isEmpty()
 
     override lateinit var responseCode: ResponseCode
 }

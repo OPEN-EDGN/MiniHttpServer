@@ -1,13 +1,15 @@
 package tech.openedgn.net.server.web.response.controller
 
+import tech.openedgn.net.server.web.consts.METHOD
 import tech.openedgn.net.server.web.request.BaseHttpRequest
+import tech.openedgn.net.server.web.response.matcher.IMatcher
 import java.io.Closeable
 
 /**
  *
  *  树节点对象
  *
- *
+ * 这并非主要的框架接口代码
  */
 interface IControllerNode : Closeable {
 
@@ -22,32 +24,36 @@ interface IControllerNode : Closeable {
     val isEmpty: Boolean
 
     /**
-     * 根据 METHOD + HEADER 来查找解析方案
-     *
-     * @param request BaseHttpRequest HTTP请求信息，注意，此方法执行时还未解析POST表单信息
-     * @return
+     * 查找解析适配器
+     * @param method METHOD METHOD类型
+     * @param acceptLocationSplit Array<String> 字符串的切割
+     * @param headers Map<String, String> 请求头
+     * @return Controller? 响应适配器，如果不错在则返回 NULL
      */
     fun select(
-        request: BaseHttpRequest
-    ): IController?
+        method: METHOD,
+        acceptLocationSplit: Array<String>,
+        headers: Map<String, String>
+    ): Controller?
+
 
     /**
      * 添加子树
-     *
-     * @param location String 绑定的地址
+     * @param bindLocationSplit Array<IMatcher> 绑定的地址切割
      * @param controllerBean Controller 适配器
-     * @return Boolean 是否添加成功
+     * @return 是否绑定成功
      */
-    fun insert( location: String, controllerBean: IController)
+    fun insert(bindLocationSplit: Array<IMatcher>, controllerBean: Controller): Boolean
 
 
     /**
      * 删除此 Controller
-     * @param location String Controller 绑定的路径
+     * @param bindLocationSplit Array<IMatcher> 绑定的地址切割
      * @param recursive Boolean 是否删除所有子项
      * @return Boolean 是否删除成功
      */
-    fun delete( location: String,recursive:Boolean):Boolean
+
+    fun delete(bindLocationSplit: Array<IMatcher>, recursive: Boolean): Boolean
 
 
     /**
@@ -55,10 +61,10 @@ interface IControllerNode : Closeable {
      *
      * 如果不存在则创建
      *
-     * @param location String 绑定的地址
+     * @param bindLocationSplit Array<IMatcher> 绑定的地址切割
      * @param controllerBean Controller 适配器
      * @return 是否更新成功
      *
      */
-    fun update( location: String, controllerBean: IController):Boolean
+    fun update(bindLocationSplit: Array<IMatcher>, controllerBean: Controller): Boolean
 }

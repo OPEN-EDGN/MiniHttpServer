@@ -6,10 +6,11 @@ import tech.openedgn.net.server.web.request.BaseHttpRequest
 import tech.openedgn.net.server.web.response.BaseHttpResponse
 import java.io.Closeable
 
-abstract class BaseControllerLoader(
-    protected val networkInfo: NetworkInfo,
-    protected val webConfig: WebConfig
-) : Closeable {
+/**
+ * Controller 查找 & 解析抽象类
+ *  生命周期为 单个会话
+ */
+interface IControllerLoader : Closeable {
     /**
      * 是否存在对应的解析器
      *
@@ -18,12 +19,12 @@ abstract class BaseControllerLoader(
      * @param request 请求信息
      * @return Boolean true or false
      */
-    abstract fun responseExists(request: BaseHttpRequest): Boolean
+    fun controllerExists(request: BaseHttpRequest): Boolean
 
     /**
-     * 写入解析器信息到容器
-     *
-     * @param httpResponse BaseHttpResponse 容器
+     * 执行解析方法
      */
-    abstract fun loadResponse(httpResponse: BaseHttpResponse)
+    fun executeController(request: BaseHttpRequest, httpResponse: BaseHttpResponse)
+
+
 }

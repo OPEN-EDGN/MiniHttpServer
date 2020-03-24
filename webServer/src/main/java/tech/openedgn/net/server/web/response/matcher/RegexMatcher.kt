@@ -1,6 +1,7 @@
-package tech.openedgn.net.server.web.utils
+package tech.openedgn.net.server.web.response.matcher
 
-class RegexMatcher(private val regex: Regex) : IMatcher {
+class RegexMatcher(private val regex: Regex) :
+    IMatcher {
     override fun matches(input: CharSequence): Boolean {
         return regex.matches(input)
     }
