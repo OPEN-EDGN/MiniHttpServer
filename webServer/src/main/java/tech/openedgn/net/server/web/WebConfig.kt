@@ -8,6 +8,7 @@ import tech.openedgn.net.server.web.response.IWrapper
 import tech.openedgn.net.server.web.response.ResponseErrorWriter
 import tech.openedgn.net.server.web.response.controller.Controller
 import tech.openedgn.net.server.web.response.controller.IControllerNode
+import tech.openedgn.net.server.web.response.controller.SimpleControllerNode
 import tech.openedgn.net.server.web.response.rules.ILocationSplitRule
 import tech.openedgn.net.server.web.response.rules.RegexLocationSplitRule
 import tech.openedgn.net.server.web.utils.getWebLogger
@@ -67,7 +68,7 @@ class WebConfig(val serverPort: Int) : Closeable {
         var locationRule : ILocationSplitRule =
             RegexLocationSplitRule()
 
-        val rootControllerNode:IControllerNode = TODO()
+        val rootControllerNode:IControllerNode = SimpleControllerNode(this)
     }
 
     inner class SafeMode {

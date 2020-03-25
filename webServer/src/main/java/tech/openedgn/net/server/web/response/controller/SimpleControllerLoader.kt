@@ -12,7 +12,11 @@ class SimpleControllerLoader(
     private val internalConfig = webConfig.InternalConfig()
     private lateinit var controller: Controller
     override fun controllerExists(request: BaseHttpRequest): Boolean {
-        val iController = internalConfig.rootControllerNode.select(request)
+        val iController = internalConfig.rootControllerNode.select(
+            request.method,
+            internalConfig.locationRule.acceptLocationSplit(request.location),
+            request.headers
+        )
         return if (iController != null) {
             controller = iController
             true
@@ -22,7 +26,8 @@ class SimpleControllerLoader(
     }
 
     override fun executeController(request: BaseHttpRequest, httpResponse: BaseHttpResponse) {
-        controller
+        val annotatedType = controller.field.annotatedType
+
     }
 
     override fun close() {

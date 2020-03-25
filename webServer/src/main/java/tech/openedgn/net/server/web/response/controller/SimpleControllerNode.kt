@@ -12,7 +12,21 @@ class SimpleControllerNode(private val config: WebConfig.InternalConfig) : ICont
     private val childNodes = HashMap<IMatcher, SimpleControllerNode>()
 
     override fun select(method: METHOD, acceptLocationSplit: Array<String>, headers: Map<String, String>): Controller? {
-        TODO("Not yet implemented")
+        for (key in childNodes.keys) {
+            if (key.matches(acceptLocationSplit[depth])) {
+                return if (depth == (acceptLocationSplit.size - 1)) {
+                    val controller = childNodes[key]?.controller
+                    if (controller != null && controller.replyMethod == method) {
+                        controller
+                    } else {
+                        null
+                    }
+                } else {
+                    childNodes[key]?.select(method, acceptLocationSplit, headers)
+                }
+            }
+        }
+        return null
     }
 
 
@@ -33,14 +47,30 @@ class SimpleControllerNode(private val config: WebConfig.InternalConfig) : ICont
     }
 
     override fun delete(bindLocationSplit: Array<IMatcher>, recursive: Boolean): Boolean {
-        TODO("Not yet implemented")
+        if (childNodes.containsKey(bindLocationSplit[depth])) {
+            if (depth < (bindLocationSplit.size - 1)) {
+                // 到达节点尾部
+                if (recursive){
+                    for (value in childNodes.values) {
+                        value.delete(bindLocationSplit,recursive)
+                    }
+                    childNodes.clear()
+                }else{
+                    childNodes[bindLocationSplit[depth]]?.controller = null
+                }
+            }
+        }
+        return true
     }
 
     override fun update(bindLocationSplit: Array<IMatcher>, controllerBean: Controller): Boolean {
-        TODO("Not yet implemented")
+        return insert(bindLocationSplit, controllerBean)
     }
 
     override fun close() {
-
+        for (value in childNodes.values) {
+            value.close()
+        }
+        childNodes.clear()
     }
 }
