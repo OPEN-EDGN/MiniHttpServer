@@ -1,13 +1,11 @@
 
-# 简单的网络通信协议实现
+# Mini Http Server
 
-> 用 ` Kotlin ` 实现部分简单的网络协议
-
-##  HTTP 1.1 
+> 用 ` Kotlin ` 实现的轻量级 HTTP 服务器 
 
 参照 [httpwg.org](https://httpwg.org/specs/) 并使用 `Kotlin` 编写的轻量级 HTTP 服务器，正在开发中，覆盖单元测试。
 
-### 已知问题
+## 已知问题
 
  - [x] 存在缓存溢出漏洞
  
