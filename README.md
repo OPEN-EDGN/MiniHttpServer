@@ -1,7 +1,6 @@
 
 # Mini Http Server (Unfinished)
 
- <h1 align="center" style="fill: red;color: red">未开发完成</h1>
 
 > 用 ` Kotlin ` 实现的轻量级 HTTP 服务器 
 
