@@ -1,6 +1,5 @@
 package tech.openedgn.net.server.web.response.controller
 
-import tech.openedgn.net.server.web.WebServerInternalException
 import tech.openedgn.net.server.web.consts.METHOD
 import tech.openedgn.net.server.web.request.BaseHttpRequest
 import tech.openedgn.net.server.web.response.Controller
@@ -9,10 +8,8 @@ import tech.openedgn.net.server.web.response.Post
 import tech.openedgn.net.server.web.response.ResponseWriter
 import tech.openedgn.net.server.web.response.simple.SimpleResponseWriter
 import tech.openedgn.net.server.web.utils.getWebLogger
-import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.log
 
-class ControllerManager : BaseControllerManager() {
+class ControllerManager : IControllerManager {
     private val logger = getWebLogger()
     private val controller = HashMap<String, Any>()
 
@@ -20,7 +17,7 @@ class ControllerManager : BaseControllerManager() {
     private val mPostControllerPath = HashMap<String, ControllerData>()
 
     @Synchronized
-    override fun addController(any: Any, classLoader: ClassLoader): Boolean {
+    override fun addController(any: Any): Boolean {
         val clazz = any.javaClass
         controller[clazz.name]?.let {
             if (it == any) {

@@ -4,13 +4,14 @@ import tech.openedgn.net.server.web.request.bodyLoader.FormDataBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.FormUrlencodedBodyLoader
 import tech.openedgn.net.server.web.response.wrapper.IWrapper
-import tech.openedgn.net.server.web.response.controller.BaseControllerManager
+import tech.openedgn.net.server.web.response.controller.IControllerManager
 import tech.openedgn.net.server.web.response.controller.ControllerManager
 import tech.openedgn.net.server.web.response.simple.EmptyResponseFill
 import tech.openedgn.net.server.web.response.wrapper.SimpleWrapper
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
@@ -52,15 +53,16 @@ class WebConfig(val serverPort: Int) : Closeable {
      * @param controllerClass Class<*> Controller 的 Class 对象 (无构造函数)
      * @return Boolean 是否添加成功
      */
-    fun addControllerClass(controllerClass: Class<*>) =
-        internalConfig.controllerManager.addControllerClass(controllerClass,javaClass.classLoader)
+    fun addControllerClass(controllerClass: Class<*>) :Boolean{
+        return addController(controllerClass.newInstance())
+    }
 
     /**
      * 添加 Controller 对象
      * @param any Any Controller
      * @return Boolean 是否添加成功
      */
-    fun addControllerClass(any: Any) = internalConfig.controllerManager.addController(any,javaClass.classLoader)
+    fun addController(any: Any) = internalConfig.controllerManager.addController(any)
 
     val internalConfig = InternalConfig()
     /**
@@ -68,8 +70,7 @@ class WebConfig(val serverPort: Int) : Closeable {
      */
     class InternalConfig {
 
-        @Volatile
-        var responseWrapper: IWrapper = SimpleWrapper()
+        val responseWrapper: List<IWrapper> = LinkedList(listOf(SimpleWrapper()))
 
         /**
          * post 解析方案
@@ -84,7 +85,7 @@ class WebConfig(val serverPort: Int) : Closeable {
 
         val emptyResponseWrapper = EmptyResponseFill()
 
-        val controllerManager: BaseControllerManager = ControllerManager()
+        val controllerManager: IControllerManager = ControllerManager()
 
     }
 

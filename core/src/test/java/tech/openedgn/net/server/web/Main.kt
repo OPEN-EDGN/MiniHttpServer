@@ -6,6 +6,7 @@ import tech.openedgn.net.server.web.request.HttpRequest
 import tech.openedgn.net.server.web.request.reader.SimpleRequestReader
 import tech.openedgn.net.server.web.response.Controller
 import tech.openedgn.net.server.web.response.Get
+import tech.openedgn.net.server.web.response.Post
 
 fun main(args: Array<String>) {
     val webServer = WebServer(8088)
@@ -13,7 +14,7 @@ fun main(args: Array<String>) {
     webConfig.timeout = 3000
     WebServer.debug = true
     webServer.enable()
-    webConfig.addControllerClass(Tests())
+    webConfig.addController(Tests())
 
 }
 
@@ -21,6 +22,10 @@ fun main(args: Array<String>) {
 public class Tests {
     @Get("/")
     public fun geta(bas: BaseHttpRequest): String {
+        return "HelloWOrld"
+    }
+    @Post("/")
+    public fun geta2(bas: BaseHttpRequest): String {
         return "HelloWOrld"
     }
 }

@@ -76,6 +76,7 @@ class ClientRunnable(
                     httpReader.loadBody()
                     //  对于 POST 请求，如果存在Controller则会继续读取POST 请求，否则进入响应阶段
                 }
+                httpRequest.printInfo()
                 if (controller.fill(httpRequest, httpResponse).not()) {
                     logger.debug("执行过程中返回 FALSE ！[503]")
                     internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_UNAVAILABLE)
@@ -91,14 +92,16 @@ class ClientRunnable(
             // 内部错误  503
         }
 
-        if (internalConfig.responseWrapper.wrap( httpRequest,httpResponse).not()) {
-            internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
-            logger.debug("填充时发生错误![502]")
+        for (iWrapper in internalConfig.responseWrapper) {
+            if (iWrapper.wrap( httpRequest,httpResponse).not()) {
+                internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
+                logger.debug("填充时[${iWrapper.javaClass.simpleName}]时发生错误! [502]")
+                break
+            }
         }
         // 填充扩展数据
         httpWriter.write(httpResponse)
-        // 响应
-        httpRequest.printInfo()
+        // 数据响应
 
     }
 
