@@ -18,3 +18,8 @@ class TempFileDataBlock(
     private val blockFile: File
 ) : BaseFileDataBlock(blockFile, true) {
 }
+
+class AnotherFileDataBlock(
+    private val blockFile: File
+) : BaseFileDataBlock(blockFile, false) {
+}

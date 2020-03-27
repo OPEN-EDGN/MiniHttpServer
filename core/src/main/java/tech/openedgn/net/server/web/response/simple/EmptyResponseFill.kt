@@ -15,6 +15,9 @@ class EmptyResponseFill() {
             Pair(
                 ResponseCode.HTTP_BAD_REQUEST,
                 ByteArrayDataBlock(javaClass.getResourceAsStream("/res/html/400.html").readBytes())
+            ), Pair(
+                ResponseCode.HTTP_NOT_FOUND,
+                ByteArrayDataBlock(javaClass.getResourceAsStream("/res/html/404.html").readBytes())
             ),
             Pair(
                 ResponseCode.HTTP_UNAVAILABLE,
@@ -35,5 +38,6 @@ class EmptyResponseFill() {
         })
         response.responseCode = code
         response.responseData = item
+        response.contentType = "text/html; charset=utf-8"
     }
 }

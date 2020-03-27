@@ -64,7 +64,7 @@ class ClientRunnable(
     override fun execute() {
         httpReader.loadMethod()
         logger.info("收到${httpReader.method}請求,請求路徑：[${httpReader.location}].")
-        val internalConfig = webConfig.InternalConfig()
+        val internalConfig = webConfig.internalConfig
         httpReader.loadHeader()
         val controllerManager = internalConfig.controllerManager
         try {
@@ -76,7 +76,10 @@ class ClientRunnable(
                     httpReader.loadBody()
                     //  对于 POST 请求，如果存在Controller则会继续读取POST 请求，否则进入响应阶段
                 }
-                controller.fill(httpRequest, httpResponse)
+                if (controller.fill(httpRequest, httpResponse).not()) {
+                    logger.debug("执行过程中返回 FALSE ！[503]")
+                    internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_UNAVAILABLE)
+                }
             } else {
                 internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_NOT_FOUND)
                 logger.debug("未查询到解析方案![404]")
@@ -87,11 +90,7 @@ class ClientRunnable(
             internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_UNAVAILABLE)
             // 内部错误  503
         }
-        if (httpResponse.isEmpty) {
-            internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
-            logger.debug("空数据块![502]")
-            //未获取到信息 502
-        }
+
         if (internalConfig.responseWrapper.wrap( httpRequest,httpResponse).not()) {
             internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
             logger.debug("填充时发生错误![502]")

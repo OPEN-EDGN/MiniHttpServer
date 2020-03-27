@@ -9,7 +9,7 @@ import java.nio.charset.Charset
  *
  */
 class HttpRequest(request: IRequest) : BaseHttpRequest(request) {
-    private val logger = getWebLogger()
+    private val logger = getWebLogger(request.remoteAddress.toString())
     override val contentType by lazy {
         if (method!=METHOD.POST){
             return@lazy ""

@@ -53,21 +53,23 @@ class WebConfig(val serverPort: Int) : Closeable {
      * @return Boolean 是否添加成功
      */
     fun addControllerClass(controllerClass: Class<*>) =
-        InternalConfig().controllerManager.addControllerClass(controllerClass,javaClass.classLoader)
+        internalConfig.controllerManager.addControllerClass(controllerClass,javaClass.classLoader)
 
     /**
      * 添加 Controller 对象
      * @param any Any Controller
      * @return Boolean 是否添加成功
      */
-    fun addControllerClass(any: Any) = InternalConfig().controllerManager.addController(any,javaClass.classLoader)
+    fun addControllerClass(any: Any) = internalConfig.controllerManager.addController(any,javaClass.classLoader)
 
+    val internalConfig = InternalConfig()
     /**
      * 服务器内部定义数值，请勿在未知其用途的情况下修改！
      */
-    inner class InternalConfig {
+    class InternalConfig {
 
-        val responseWrapper: IWrapper = SimpleWrapper()
+        @Volatile
+        var responseWrapper: IWrapper = SimpleWrapper()
 
         /**
          * post 解析方案
