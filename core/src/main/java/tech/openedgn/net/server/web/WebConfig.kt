@@ -1,16 +1,13 @@
 package tech.openedgn.net.server.web
 
-import tech.openedgn.net.server.web.consts.ResponseCode
 import tech.openedgn.net.server.web.request.bodyLoader.FormDataBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.BaseBodyLoader
 import tech.openedgn.net.server.web.request.bodyLoader.FormUrlencodedBodyLoader
-import tech.openedgn.net.server.web.response.IWrapper
-import tech.openedgn.net.server.web.response.ResponseErrorWriter
-import tech.openedgn.net.server.web.response.controller.Controller
-import tech.openedgn.net.server.web.response.controller.IControllerNode
-import tech.openedgn.net.server.web.response.controller.SimpleControllerNode
-import tech.openedgn.net.server.web.response.rules.ILocationSplitRule
-import tech.openedgn.net.server.web.response.rules.RegexLocationSplitRule
+import tech.openedgn.net.server.web.response.wrapper.IWrapper
+import tech.openedgn.net.server.web.response.controller.BaseControllerManager
+import tech.openedgn.net.server.web.response.controller.ControllerManager
+import tech.openedgn.net.server.web.response.simple.EmptyResponseFill
+import tech.openedgn.net.server.web.response.wrapper.SimpleWrapper
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
 import java.io.File
@@ -26,16 +23,19 @@ class WebConfig(val serverPort: Int) : Closeable {
     }
 
     private val logger = getWebLogger()
+
     /**
      *临时文件位置
      */
     @Volatile
     var tempFolder: File = File(System.getProperty("java.io.tmpdir"), "WebServerTemp")
+
     /**
      * HTTP 目录索引
      */
     @Volatile
     var indexFolder: File = File(System.getProperty("java.io.tmpdir"), "WebServerWork")
+
     /**
      * 客户端连接最长阻塞时间
      */
@@ -47,28 +47,43 @@ class WebConfig(val serverPort: Int) : Closeable {
      */
     var accept: Boolean = false
 
+    /**
+     * 添加 Controller 对象
+     * @param controllerClass Class<*> Controller 的 Class 对象 (无构造函数)
+     * @return Boolean 是否添加成功
+     */
+    fun addControllerClass(controllerClass: Class<*>) =
+        InternalConfig().controllerManager.addControllerClass(controllerClass,javaClass.classLoader)
 
-    val requestBodyLoader: ConcurrentHashMap<String, KClass<out BaseBodyLoader>> =
-        ConcurrentHashMap(
-            mapOf(
-                Pair("multipart/form-data", FormDataBodyLoader::class),
-                Pair("application/x-www-form-urlencoded", FormUrlencodedBodyLoader::class)
-            )
-        )
+    /**
+     * 添加 Controller 对象
+     * @param any Any Controller
+     * @return Boolean 是否添加成功
+     */
+    fun addControllerClass(any: Any) = InternalConfig().controllerManager.addController(any,javaClass.classLoader)
 
     /**
      * 服务器内部定义数值，请勿在未知其用途的情况下修改！
      */
     inner class InternalConfig {
-        val responseWrapper: IWrapper = TODO()
-        val errorResponse: Map<ResponseCode, Controller> = TODO()
-        val simpleResponseErrorWriter: ResponseErrorWriter = ResponseErrorWriter(errorResponse)
 
-        @Volatile
-        var locationRule : ILocationSplitRule =
-            RegexLocationSplitRule()
+        val responseWrapper: IWrapper = SimpleWrapper()
 
-        val rootControllerNode:IControllerNode = SimpleControllerNode(this)
+        /**
+         * post 解析方案
+         */
+        val requestBodyLoader: ConcurrentHashMap<String, KClass<out BaseBodyLoader>> =
+            ConcurrentHashMap(
+                mapOf(
+                    Pair("multipart/form-data", FormDataBodyLoader::class),
+                    Pair("application/x-www-form-urlencoded", FormUrlencodedBodyLoader::class)
+                )
+            )
+
+        val emptyResponseWrapper = EmptyResponseFill()
+
+        val controllerManager: BaseControllerManager = ControllerManager()
+
     }
 
     inner class SafeMode {

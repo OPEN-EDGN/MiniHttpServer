@@ -1,6 +1,6 @@
 package tech.openedgn.net.server.web
 
-import tech.openedgn.net.server.web.thread.ServerSocketRunnable
+import tech.openedgn.net.server.web.thread.ServerRunnable
 import tech.openedgn.net.server.web.utils.WebLoggerConfig
 import tech.openedgn.net.server.web.utils.getWebLogger
 import java.io.Closeable
@@ -30,7 +30,7 @@ class WebServer @JvmOverloads constructor(
             factory.createServerSocket(webConfig.serverPort) ?: throw SocketException("端口[$serverPort] 绑定错误！")
     // HTTP 端口绑定套接字
     private val serverSocketRunnable by lazy {
-        ServerSocketRunnable(
+        ServerRunnable(
             serverSocket,
             webConfig
         )

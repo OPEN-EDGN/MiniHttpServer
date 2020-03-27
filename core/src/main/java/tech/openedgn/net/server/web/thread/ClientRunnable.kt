@@ -10,14 +10,14 @@ import tech.openedgn.net.server.web.request.reader.IRequestReader
 import tech.openedgn.net.server.web.request.reader.SimpleRequestReader
 import tech.openedgn.net.server.web.response.BaseHttpResponse
 import tech.openedgn.net.server.web.response.HttpResponse
-import tech.openedgn.net.server.web.response.controller.IControllerLoader
-import tech.openedgn.net.server.web.response.controller.SimpleControllerLoader
 import tech.openedgn.net.server.web.response.writer.BaseHttpWriter
 import tech.openedgn.net.server.web.response.writer.HttpWriter
 import tech.openedgn.net.server.web.utils.AutoClosedRunnable
 import tech.openedgn.net.server.web.utils.safeCloseIt
+import java.io.Closeable
 import java.lang.Exception
 import java.net.Socket
+import java.util.*
 
 /**
  * 请求解析线程
@@ -59,46 +59,41 @@ class ClientRunnable(
         HttpWriter(networkInfo.toString(), client.getOutputStream())
     }
 
-    /**
-     * controller 解析 & 执行类
-     */
-    private val controllerLoader: IControllerLoader by lazy {
-        SimpleControllerLoader(
-            networkInfo,
-            webConfig
-        )
-    }
+    private val linkedList = LinkedList<Closeable>()
 
     override fun execute() {
         httpReader.loadMethod()
         logger.info("收到${httpReader.method}請求,請求路徑：[${httpReader.location}].")
         val internalConfig = webConfig.InternalConfig()
         httpReader.loadHeader()
+        val controllerManager = internalConfig.controllerManager
         try {
-            if (controllerLoader.controllerExists(httpRequest)) {
+            val controller = controllerManager.loadController(httpRequest)
+            if (controller != null) {
+                linkedList.addFirst(controller)
                 logger.debug("会话存在可用解析方案!")
                 if (httpReader.method == METHOD.POST) {
                     httpReader.loadBody()
                     //  对于 POST 请求，如果存在Controller则会继续读取POST 请求，否则进入响应阶段
                 }
-                controllerLoader.executeController(httpRequest, httpResponse)
+                controller.fill(httpRequest, httpResponse)
             } else {
-                internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_NOT_FOUND)
+                internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_NOT_FOUND)
                 logger.debug("未查询到解析方案![404]")
                 // 未查询到解析方案，返回 404
             }
         } catch (e: Exception) {
             logger.debug("在处理请求的过程中发生错误！[503]", e)
-            internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_UNAVAILABLE)
+            internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_UNAVAILABLE)
             // 内部错误  503
         }
         if (httpResponse.isEmpty) {
-            internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
+            internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
             logger.debug("空数据块![502]")
             //未获取到信息 502
         }
-        if (internalConfig.responseWrapper.wrap(httpResponse, httpRequest).not()) {
-            internalConfig.simpleResponseErrorWriter.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
+        if (internalConfig.responseWrapper.wrap( httpRequest,httpResponse).not()) {
+            internalConfig.emptyResponseWrapper.write(httpResponse, ResponseCode.HTTP_BAD_GATEWAY)
             logger.debug("填充时发生错误![502]")
         }
         // 填充扩展数据
@@ -109,6 +104,10 @@ class ClientRunnable(
     }
 
     override fun close() {
+        for (closeable in linkedList) {
+            closeable.safeCloseIt(logger)
+        }
+        linkedList.clear()
         httpReader.safeCloseIt(logger)
         httpResponse.safeCloseIt(logger)
         httpWriter.safeCloseIt(logger)

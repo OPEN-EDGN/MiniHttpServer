@@ -15,7 +15,13 @@ class HttpResponse(remoteInfo: NetworkInfo) : BaseHttpResponse(remoteInfo) {
         }
 
     override val isEmpty: Boolean
-        get() = pIDataBlock == null && responseHeader.isEmpty()
+        get() = pIDataBlock == null || responseHeader.isEmpty()
+
+    override var contentType: String
+        get() =  responseHeader.getOrDefault("Content-Type", "")
+    set(value) {
+        responseHeader["Content-Type"] = value
+    }
 
     override lateinit var responseCode: ResponseCode
 }

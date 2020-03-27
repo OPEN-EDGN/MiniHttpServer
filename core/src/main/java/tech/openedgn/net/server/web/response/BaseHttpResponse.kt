@@ -28,4 +28,5 @@ abstract class BaseHttpResponse(protected val remoteInfo: NetworkInfo) : IRespon
         responseData.close()
     }
 
+    abstract var contentType: String
 }

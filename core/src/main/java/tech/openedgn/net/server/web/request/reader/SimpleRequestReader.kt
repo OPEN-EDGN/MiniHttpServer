@@ -113,7 +113,7 @@ class SimpleRequestReader(
             val bodyLoaderImplClass: KClass<out BaseBodyLoader>? =
                 BaseBodyLoader.searchRequestBodyLoader(
                     headers,
-                    webConfig.requestBodyLoader,
+                    webConfig.InternalConfig().requestBodyLoader,
                     logger
                 )
             if (bodyLoaderImplClass != null) {

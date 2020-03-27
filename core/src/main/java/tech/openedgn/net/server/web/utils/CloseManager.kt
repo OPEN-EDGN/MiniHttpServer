@@ -52,7 +52,7 @@ abstract class ClosedManager(tag:String = "",private val disableLogger:Boolean =
     @Volatile
     override var closeable = false
 
-    override fun <T : Closeable> T.registerCloseable(): T {
+    final override fun <T : Closeable> T.registerCloseable(): T {
         if (closeable) {
             throw ClosedException("此对象生命周期已经结束！")
         }

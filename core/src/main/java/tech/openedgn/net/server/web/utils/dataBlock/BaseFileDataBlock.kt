@@ -14,8 +14,9 @@ import java.io.RandomAccessFile
  *
  * @property blockFile File 数据块文件
  */
-class FileDataBlock(
+abstract class BaseFileDataBlock(
     private val blockFile: File
+    , private val delete: Boolean
 ) : ClosedManager("", true), IDataBlock {
     private val randomAccessFile by lazy { RandomAccessFile(blockFile, "r") }
 
@@ -27,6 +28,7 @@ class FileDataBlock(
     }
 
     override val size = blockFile.length()
+
     @Volatile
     private var closed = false
 
@@ -68,9 +70,10 @@ class FileDataBlock(
     override fun close() {
         closed = true
         super.closeAllRegisterCloseable()
-        if (blockFile.delete().not()) {
-            blockFile.deleteOnExit()
+        if (delete) {
+            blockFile.delete()
         }
+
     }
 
     override fun toString(): String {

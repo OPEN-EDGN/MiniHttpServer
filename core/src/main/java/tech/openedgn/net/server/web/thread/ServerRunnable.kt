@@ -13,7 +13,7 @@ import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-class ServerSocketRunnable(
+class ServerRunnable(
     private val serverSocket: ServerSocket,
     private val webConfig: WebConfig
 ) : AutoClosedRunnable("HOST") {

@@ -92,7 +92,7 @@ class DataBlockOutputStream(
             closed = true
             output.safeCloseIt()
             val baseDataReader = if (checkFile) {
-                FileDataBlock(tempFile)
+                TempFileDataBlock(tempFile)
             } else {
                 tempFile.delete()
                 ByteArrayDataBlock((output as ByteArrayOutputStream).toByteArray())

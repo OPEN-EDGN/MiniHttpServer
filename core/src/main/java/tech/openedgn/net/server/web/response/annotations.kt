@@ -1,4 +1,4 @@
-package tech.openedgn.net.server.web
+package tech.openedgn.net.server.web.response
 
 /**
  * 表明只接受什么类型的 Content-Type
